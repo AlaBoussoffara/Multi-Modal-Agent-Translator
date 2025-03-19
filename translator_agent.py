@@ -43,7 +43,7 @@ class TranslatorAgent:
         translate text to a target language.
         It support normal text and JSON object translation.
     """
-    def __init__(self, model: str, target_language: str='french'):
+    def __init__(self, model=llm, target_language: str='french'):
         self.model = model
         self.target_language = target_language
 
