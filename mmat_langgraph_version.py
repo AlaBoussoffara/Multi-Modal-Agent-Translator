@@ -1,9 +1,7 @@
 """
 main.py
 
-Demonstrates 2 approaches to a multi-step translator pipeline:
-1) A "Classic" direct code-driven pipeline (no LLM agent).
-2) A LangGraph approach.
+Demonstrates a LangGraph approach to a multi-step translator pipeline.
 
 """
 
@@ -13,10 +11,10 @@ from langchain_aws import ChatBedrock
 from langgraph.graph import StateGraph, START, END
 
 # Import agents
-from type_detection_agent import TypeDetectionAgent
-from extractor_agent import ExtractorAgent
-from translator_agent import TranslatorAgent
-from generator_agent import GeneratorAgent
+from agents.type_detection_agent import TypeDetectionAgent
+from agents.extractor_agent import ExtractorAgent
+from agents.translator_agent import TranslatorAgent
+from agents.generator_agent import GeneratorAgent
 
 # Initialize the language model
 llm = ChatBedrock(
@@ -27,41 +25,7 @@ llm = ChatBedrock(
 )
 
 ##############################
-# 1) CLASSIC PIPELINE
-##############################
-def classic_pipeline(input_filepath: str, output_filepath: str):
-    """
-    A direct, code-driven pipeline (no LLM deciding the chain).
-    1) Detect file type
-    2) Extract content
-    3) Translate content
-    4) Generate final output
-    """
-    print("[CLASSIC] Starting direct pipeline...")
-
-    # 1) Detect file type
-    file_type = TypeDetectionAgent().detect(input_filepath)
-
-    # 2) Extract content
-    extractor = ExtractorAgent(file_type)
-    extracted_content = extractor.extract(input_filepath)  # e.g. {"paragraphs": [...]}
-
-    paragraphs = extracted_content["paragraphs"]
-
-    # 3) Translate content
-    translator = TranslatorAgent(llm)
-    translated_paragraphs = translator.translate(paragraphs)  # returns updated list or dict
-
-    # 4) Generate final output
-    generator = GeneratorAgent(file_type)
-    structured_data = {"paragraphs": translated_paragraphs}
-    generator.generate(structured_data, input_filepath, output_filepath)
-
-    print(f"[CLASSIC] Done! Output => {output_filepath}")
-
-
-##############################
-# 2) LANGGRAPH PIPELINE
+# LANGGRAPH PIPELINE
 ##############################
 def langgraph_pipeline(input_filepath: str, output_filepath: str):
     """
@@ -128,17 +92,14 @@ def langgraph_pipeline(input_filepath: str, output_filepath: str):
 # MAIN
 ##############################
 if __name__ == "__main__":
-    input_dir = "documents_to_translate"
-    output_dir = "translated_documents"
+    input_dir = "documents à traduire"
+    output_dir = "documents traduits"
     os.makedirs(output_dir, exist_ok=True)
 
-    input_file = "input.pdf"
+    input_file = "input1.pdf"
     input_filepath = os.path.join(input_dir, input_file)
     file_root, file_ext = os.path.splitext(input_file)
     output_filepath = os.path.join(output_dir, f"{file_root}_translated{file_ext}")
 
-    print("\n=== APPROACH 1: CLASSIC PIPELINE ===")
-    classic_pipeline(input_filepath, output_filepath)
-
-    print("\n=== APPROACH 2: LANGGRAPH PIPELINE ===")
+    print("\n=== LANGGRAPH PIPELINE ===")
     langgraph_pipeline(input_filepath, output_filepath)
