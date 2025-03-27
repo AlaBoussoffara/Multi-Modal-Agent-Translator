@@ -1,2 +1,3 @@
 .chainlit/
 .files/
+__pycache__/
