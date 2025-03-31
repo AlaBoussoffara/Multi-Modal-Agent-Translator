@@ -20,8 +20,8 @@ target_language = st.selectbox(
 uploaded_file = st.file_uploader("📤 Téléchargez votre document", type=["pdf", "docx"])
 
 if uploaded_file:
-    file_name = uploaded_file.name
-    file_ext = os.path.splitext(file_name)[-1]
+    file_name, file_ext = os.path.splitext(uploaded_file.name)
+    translated_file_name = f"{file_name}_translated{file_ext}"
 
     # Barre de progression
     progress_bar = st.progress(0)
@@ -52,7 +52,8 @@ if uploaded_file:
     # Bouton de téléchargement du document traduit
     st.success("Votre document traduit est prêt ! 📂")
     with open(temp_output_path, "rb") as f:
-        st.download_button("📥 Télécharger le document traduit", f, file_name=f"translated{file_ext}")
+        st.download_button("📥 Télécharger le document traduit", f, file_name=translated_file_name)
+
 
     # Suppression du fichier de sortie après téléchargement
     os.remove(temp_output_path)
