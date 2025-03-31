@@ -1,52 +1,61 @@
 import streamlit as st
 import os
 import tempfile
-from mmat_langgraph_version import langgraph_pipeline  # Import updated model
+from mmat_langgraph_version import langgraph_pipeline  # Importer le modèle mis à jour
 
-# Streamlit App Configuration
-st.set_page_config(page_title="Document Translator", page_icon="🌍")
-st.title(":rainbow[Document Translator] 📄🌍")
-st.write("Upload a document, and get a translated version while keeping the layout intact.")
+# Configuration de l'application Streamlit
+st.set_page_config(page_title="Traducteur de Documents", page_icon="🌍")
+st.title(":rainbow[Traducteur de Documents] 📄🌍")
+st.write("Téléchargez un document, sélectionnez la langue cible et obtenez une version traduite tout en conservant la mise en page.")
 
-uploaded_file = st.file_uploader("Upload your document", type=["pdf", "docx"])
+# Sélection de la langue cible
+st.subheader("🌍 Choisissez la langue cible")
+target_language = st.selectbox(
+    "Sélectionnez une langue pour la traduction :", 
+    ["French", "English"], 
+    index=0,  # Sélection par défaut
+)
+
+# Téléversement du fichier
+uploaded_file = st.file_uploader("📤 Téléchargez votre document", type=["pdf", "docx"])
 
 if uploaded_file:
     file_name = uploaded_file.name
     file_ext = os.path.splitext(file_name)[-1]
 
-    # Progress bar UI
+    # Barre de progression
     progress_bar = st.progress(0)
     status_text = st.empty()
 
     def update_progress(percent):
-        """ Update Streamlit progress bar dynamically based on LangGraph's output """
+        """ Met à jour la barre de progression Streamlit dynamiquement selon la sortie de LangGraph """
         progress_bar.progress(percent)
-        status_text.text(f"Translation Progress: {percent}%")
+        status_text.text(f"Progression de la traduction : {percent}%")
 
-    with st.status("Translating... Please wait! ⏳", expanded=False) as status:
-        # Create temporary input file
+    with st.status("Traduction en cours... Veuillez patienter ! ⏳", expanded=False) as status:
+        # Création d'un fichier temporaire pour l'entrée
         with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_input:
             temp_input.write(uploaded_file.read())
             temp_input_path = temp_input.name
 
-        # Create temporary output file path
+        # Création du chemin de sortie temporaire
         temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
 
-        # Run translation with real progress updates
-        langgraph_pipeline(temp_input_path, temp_output_path, update_progress)
+        # Exécution de la traduction avec la langue sélectionnée
+        langgraph_pipeline(temp_input_path, temp_output_path, target_language, update_progress)
 
-        # Remove input file after processing
+        # Suppression du fichier d'entrée après le traitement
         os.remove(temp_input_path)
 
-        status.update(label="Translation Complete! 🎉", state="complete", expanded=False)
+        status.update(label="Traduction terminée ! 🎉", state="complete", expanded=False)
 
-    # Display download button
-    st.success("Your translated document is ready! 📂")
+    # Bouton de téléchargement du document traduit
+    st.success("Votre document traduit est prêt ! 📂")
     with open(temp_output_path, "rb") as f:
-        st.download_button("📥 Download Translated Document", f, file_name=f"translated{file_ext}")
+        st.download_button("📥 Télécharger le document traduit", f, file_name=f"translated{file_ext}")
 
-    # Cleanup output file after download
+    # Suppression du fichier de sortie après téléchargement
     os.remove(temp_output_path)
 
-    # Celebration animation
+    # Animation de célébration
     st.balloons()

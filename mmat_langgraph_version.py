@@ -24,7 +24,7 @@ llm = ChatBedrock(
     model_kwargs={"temperature": 0},
 )
 
-def langgraph_pipeline(input_filepath: str, output_filepath: str, progress_callback=None):
+def langgraph_pipeline(input_filepath: str, output_filepath: str, target_language="french", progress_callback=None):
     """
     A LangGraph-based pipeline with progress tracking for continuous updates.
     """
@@ -56,7 +56,7 @@ def langgraph_pipeline(input_filepath: str, output_filepath: str, progress_callb
         return {"extracted_content": extracted_content}
 
     def translate_node(state: OverallState) -> OverallState:
-        translator = TranslatorAgent(llm)
+        translator = TranslatorAgent(llm, target_language)
         
         # Track progress
         total_chunks = len(state["extracted_content"]["paragraphs"])
