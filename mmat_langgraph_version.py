@@ -24,12 +24,9 @@ llm = ChatBedrock(
     model_kwargs={"temperature": 0},
 )
 
-##############################
-# LANGGRAPH PIPELINE
-##############################
-def langgraph_pipeline(input_filepath: str, output_filepath: str):
+def langgraph_pipeline(input_filepath: str, output_filepath: str, progress_callback=None):
     """
-    A LangGraph-based pipeline.
+    A LangGraph-based pipeline with progress tracking for continuous updates.
     """
     print("[LANGGRAPH] Starting LangGraph pipeline...")
 
@@ -60,7 +57,23 @@ def langgraph_pipeline(input_filepath: str, output_filepath: str):
 
     def translate_node(state: OverallState) -> OverallState:
         translator = TranslatorAgent(llm)
-        translated_paragraphs = translator.translate(state["extracted_content"]["paragraphs"])
+        
+        # Track progress
+        total_chunks = len(state["extracted_content"]["paragraphs"])
+        completed_chunks = 0
+
+        # Translate paragraphs and update progress
+        translated_paragraphs = []
+        for paragraph in state["extracted_content"]["paragraphs"]:
+            translated_paragraph = translator.translate([paragraph])[0]
+            translated_paragraphs.append(translated_paragraph)
+            completed_chunks += 1
+
+            # Update the progress bar
+            if progress_callback:
+                progress_percentage = int((completed_chunks / total_chunks) * 100)
+                progress_callback(progress_percentage)
+
         return {"translated_paragraphs": translated_paragraphs}
 
     def generate_node(state: OverallState) -> OutputState:
