@@ -199,7 +199,7 @@ class PDFGenerator(BaseOutputGenerator):
             )
 
         # === STEP 3: Save the modified PDF ===
-        doc.save(output_filepath)
+        doc.save(output_filepath, garbage=4, deflate=True)
         doc.close()
         print(f"✅ New PDF created from '{original_filepath}' => '{output_filepath}'")
 
