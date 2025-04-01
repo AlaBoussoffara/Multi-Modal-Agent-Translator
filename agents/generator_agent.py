@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import fitz
 from collections import Counter
 import numpy as np
+import pikepdf
 
 class BaseOutputGenerator(ABC):
     """
@@ -210,6 +211,8 @@ class DOCXGenerator(BaseOutputGenerator):
         for para in structured_data.get("paragraphs", []):
             doc.add_paragraph(para["text"])
         doc.save(output_filepath)
+        with pikepdf.open(output_filepath) as pdf:
+            pdf.save(output_filepath, compress_streams=True)   
 
 class HTMLGenerator(BaseOutputGenerator):
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
