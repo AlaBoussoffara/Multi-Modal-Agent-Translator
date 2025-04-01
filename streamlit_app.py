@@ -19,44 +19,47 @@ target_language = st.selectbox(
 # Téléversement du fichier
 uploaded_file = st.file_uploader("📤 Téléchargez votre document", type=["pdf", "docx"])
 
+# Vérifier si un fichier a été téléchargé
 if uploaded_file:
     file_name, file_ext = os.path.splitext(uploaded_file.name)
     translated_file_name = f"{file_name}_translated{file_ext}"
 
-    # Barre de progression
-    progress_bar = st.progress(0)
-    status_text = st.empty()
+    # Bouton pour lancer la traduction
+    if st.button("🚀 Lancer la traduction"):
+        # Barre de progression
+        progress_bar = st.progress(0)
+        status_text = st.empty()
 
-    def update_progress(percent):
-        """ Met à jour la barre de progression Streamlit dynamiquement selon la sortie de LangGraph """
-        progress_bar.progress(percent)
-        status_text.text(f"Progression de la traduction : {percent}%")
+        def update_progress(percent):
+            """ Met à jour la barre de progression Streamlit dynamiquement selon la sortie de LangGraph """
+            progress_bar.progress(percent)
+            status_text.text(f"Progression de la traduction : {percent}%")
 
-    with st.status("Traduction en cours... Veuillez patienter ! ⏳", expanded=False) as status:
-        # Création d'un fichier temporaire pour l'entrée
-        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_input:
-            temp_input.write(uploaded_file.read())
-            temp_input_path = temp_input.name
+        with st.status("Traduction en cours... Veuillez patienter ! ⏳", expanded=False) as status:
+            # Création d'un fichier temporaire pour l'entrée
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_input:
+                temp_input.write(uploaded_file.read())
+                temp_input_path = temp_input.name
 
-        # Création du chemin de sortie temporaire
-        temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
+            # Création du chemin de sortie temporaire
+            temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
 
-        # Exécution de la traduction avec la langue sélectionnée
-        langgraph_pipeline(temp_input_path, temp_output_path, target_language, update_progress)
+            # Exécution de la traduction avec la langue sélectionnée
+            langgraph_pipeline(temp_input_path, temp_output_path, target_language, update_progress)
+            # Mise à jour de la barre de progression à 100%
+            update_progress(100)
+            # Suppression du fichier d'entrée après le traitement
+            os.remove(temp_input_path)
 
-        # Suppression du fichier d'entrée après le traitement
-        os.remove(temp_input_path)
+            status.update(label="Traduction terminée ! 🎉", state="complete", expanded=False)
 
-        status.update(label="Traduction terminée ! 🎉", state="complete", expanded=False)
+        # Bouton de téléchargement du document traduit
+        st.success("Votre document traduit est prêt ! 📂")
+        with open(temp_output_path, "rb") as f:
+            st.download_button("📥 Télécharger le document traduit", f, file_name=translated_file_name)
 
-    # Bouton de téléchargement du document traduit
-    st.success("Votre document traduit est prêt ! 📂")
-    with open(temp_output_path, "rb") as f:
-        st.download_button("📥 Télécharger le document traduit", f, file_name=translated_file_name)
+        # Suppression du fichier de sortie après téléchargement
+        os.remove(temp_output_path)
 
-
-    # Suppression du fichier de sortie après téléchargement
-    os.remove(temp_output_path)
-
-    # Animation de célébration
-    st.balloons()
+        # Animation de célébration
+        st.balloons()

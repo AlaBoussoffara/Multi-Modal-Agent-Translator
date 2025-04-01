@@ -59,7 +59,7 @@ def langgraph_pipeline(input_filepath: str, output_filepath: str, target_languag
         translator = TranslatorAgent(llm, target_language)
         
         # Track progress
-        total_chunks = len(state["extracted_content"]["paragraphs"])
+        total_chunks = len(state["extracted_content"]["paragraphs"])+1 
         completed_chunks = 0
 
         # Translate paragraphs and update progress
