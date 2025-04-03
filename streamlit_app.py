@@ -1,75 +1,130 @@
+'''
+Document Translator Streamlit App
+'''
+
 import streamlit as st
 import os
 import tempfile
-from mmat_langgraph_version import langgraph_pipeline  # Importer le modèle mis à jour
+import time
+from mmat_langgraph_version import langgraph_pipeline  # Updated pipeline import
 
-# Configuration de l'application Streamlit
-st.set_page_config(page_title="Traducteur de Documents", page_icon="🌍")
-st.title(":rainbow[Traducteur de Documents] 📄🌍")
-st.write("Téléchargez un document, sélectionnez la langue cible et obtenez une version traduite tout en conservant la mise en page.")
+# --- UI Layout ---
+st.set_page_config(page_title="Document Translator", page_icon="🌍")
+st.title(":rainbow[Document Translator] 📄🌍")
+st.write("Upload a document, select the target language, and get a translated version while preserving the layout.")
 
-# Sélection de la langue cible
+# --- Session state defaults ---
+if "translation_in_progress" not in st.session_state:
+    st.session_state.translation_in_progress = False
+if "translation_started" not in st.session_state:
+    st.session_state.translation_started = False
+if "log_messages" not in st.session_state:
+    st.session_state.log_messages = []
+if "translated_files" not in st.session_state:
+    st.session_state.translated_files = []  # List of dicts: { "name": ..., "path": ... }
+
+# --- Utility Functions ---
+def update_log(message: str):
+    """
+    Append a log message with a timestamp to the session state and update the log display.
+
+    Args:
+        message (str): The message to add to the log.
+    """
+    timestamp = time.strftime("%H:%M:%S")
+    full_message = f"[{timestamp}] {message}"
+    st.session_state.log_messages.append(full_message)
+    print(full_message)
+    log_placeholder.text_area("Event Log", "\n".join(st.session_state.log_messages), height=200)
+
+def progress_callback(percent):
+    """
+    Callback function to update the progress indicators during translation.
+
+    Args:
+        percent (int): Current progress percentage.
+    """
+    progress_bar.progress(percent)
+    status_text.text(f"Translation progress: {percent}%")
+
+def start_translation_callback():
+    """
+    Callback function to mark the translation as started.
+    """
+    st.session_state.translation_in_progress = True
+
+# --- Language Selection ---
 target_language = st.selectbox(
-    "Sélectionnez une langue pour la traduction :", 
-    ["French", "English"], 
-    index=0,  # Sélection par défaut
+    "Select a language for translation:",
+    ["English", "French"],
+    index=0
 )
 
-# Téléversement du fichier
-uploaded_file = st.file_uploader("📤 Téléchargez votre document", type=["pdf", "docx"])
+# --- File Upload ---
+uploaded_files = st.file_uploader("📤 Upload your documents", type=["pdf", "docx"], accept_multiple_files=True)
+if uploaded_files:
+    st.subheader("Uploaded Files Preview")
+    file_info = [
+        {"Name": f.name, "Type": f.type, "Size (KB)": round(len(f.getvalue()) / 1024, 2)}
+        for f in uploaded_files
+    ]
+    st.table(file_info)
 
-# Variables de session pour éviter la retraduction
-if "translation_done" not in st.session_state:
-    st.session_state.translation_done = False
-if "translated_file_path" not in st.session_state:
-    st.session_state.translated_file_path = None
-if "translated_file_name" not in st.session_state:
-    st.session_state.translated_file_name = None
+# --- Start Button ---
+start_button = st.button(
+    "Start Translation",
+    disabled=(not uploaded_files or st.session_state.translation_in_progress),
+    on_click=start_translation_callback
+)
 
-# Vérifier si un fichier est téléchargé et que la traduction n'a pas encore été faite
-if uploaded_file and not st.session_state.translation_done:
-    file_name, file_ext = os.path.splitext(uploaded_file.name)
-    translated_file_name = f"{file_name}_translated{file_ext}"
-
-    # Créer un fichier temporaire pour stocker le fichier uploadé
-    with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_input:
-        temp_input.write(uploaded_file.read())
-        temp_input_path = temp_input.name
-
-    # Chemin de sortie pour le fichier traduit
-    temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
-
-    # Affichage de la barre de progression
+# --- Progress Container ---
+progress_container = st.container()
+with progress_container:
     progress_bar = st.progress(0)
     status_text = st.empty()
 
-    def update_progress(percent):
-        """ Met à jour la barre de progression dynamiquement. """
-        progress_bar.progress(percent)
-        status_text.text(f"Progression de la traduction : {percent}%")
+# --- Create log placeholder early so update_log can always use it ---
+log_placeholder = st.empty()
 
-    with st.status("Traduction en cours... Veuillez patienter ⏳", expanded=False) as status:
-        # Exécution de la traduction
-        langgraph_pipeline(temp_input_path, temp_output_path, target_language, update_progress)
-        update_progress(100)  # Fin de la barre de progression
-
-        # Suppression du fichier temporaire d'entrée après la traduction
+# --- Translation Process ---
+if st.session_state.translation_in_progress and not st.session_state.translation_started:
+    st.session_state.translation_started = True
+    update_log("Starting translation process for uploaded files.")
+    
+    for uploaded_file in uploaded_files:
+        file_name, file_ext = os.path.splitext(uploaded_file.name)
+        translated_file_name = f"{file_name}_translated{file_ext}"
+        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as temp_input:
+            temp_input.write(uploaded_file.getvalue())
+            temp_input_path = temp_input.name
+        
+        temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
+        ref_file_path = os.path.join("ref_translations", uploaded_file.name)
+        update_log(f"Processing file: {uploaded_file.name}")
+        status_text.text(f"Translating {uploaded_file.name}...")
+        
+        try:
+            evaluation_results = langgraph_pipeline(temp_input_path, temp_output_path, ref_file_path, target_language, progress_callback)
+            update_log(f"Translation complete for {uploaded_file.name}.")
+            update_log(f"Evaluation results: {evaluation_results[0]['COMET Score']}")
+            st.session_state.translated_files.append({
+                "name": translated_file_name,
+                "path": temp_output_path
+            })
+        except Exception as e:
+            update_log(f"Error translating {uploaded_file.name}: {str(e)}")
+        
         os.remove(temp_input_path)
+    
+    st.session_state.translation_in_progress = False
 
-        status.update(label="Traduction terminée ! 🎉", state="complete", expanded=False)
-
-    # Stocker le chemin du fichier traduit et marquer la traduction comme terminée
-    st.session_state.translation_done = True
-    st.session_state.translated_file_path = temp_output_path
-    st.session_state.translated_file_name = translated_file_name  # Store the translated file name
-
-    # Animation de célébration
-    st.balloons()
-
-# Si la traduction est terminée, afficher le bouton de téléchargement
-if st.session_state.translation_done and st.session_state.translated_file_path:
-    st.success("Votre document traduit est prêt ! 📂")
-    with open(st.session_state.translated_file_path, "rb") as f:
-        st.download_button("📥 Télécharger le document traduit", f, file_name=st.session_state.translated_file_name)
-
-    # Ne pas supprimer le fichier de sortie après téléchargement pour ne pas relancer la traduction
+if st.session_state.translated_files:
+    st.success("Translation completed for some files!")
+    for file_info in st.session_state.translated_files:
+        with open(file_info["path"], "rb") as f:
+            st.download_button(
+                label=f"Download {file_info['name']}",
+                data=f,
+                file_name=file_info["name"]
+            )

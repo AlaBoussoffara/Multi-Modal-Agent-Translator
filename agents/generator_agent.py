@@ -1,65 +1,73 @@
-# generator_agent.py
+"""
+Module for generating output files that integrate translated content into the original layout.
+
+This module defines abstract base classes and concrete implementations
+for PDF, DOCX, HTML, and TXT outputs.
+"""
 
 from abc import ABC, abstractmethod
-import fitz
 from collections import Counter
+import fitz
 import numpy as np
+from docx import Document
+from PIL import Image
+
 
 class BaseOutputGenerator(ABC):
     """
-    Abstract base class for generating output files with translated content.
+    Abstract base class for output generators.
     """
     @abstractmethod
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
         Reinserts translated content into the original layout and saves the output file.
+
+        Args:
+            structured_data (dict): Translated content structured by paragraphs.
+            original_filepath (str): Path to the original file.
+            output_filepath (str): Path to save the output file.
         """
-        pass
 
 class PDFGenerator(BaseOutputGenerator):
     """
-    Handles PDF output generation using PyMuPDF, including background sampling,
-    redaction, and insertion of translated text.
+    Generates PDF output using PyMuPDF, handling redaction and insertion of translated text.
     """
-
     def get_background_color_from_bbox(self, pdf_path, page_number, bbox,
                                        zoom=2, border_width=5, exclude_color=None,
                                        tolerance=20):
         """
-        Determines the background color of a given bounding box by sampling border pixels.
-        Excludes pixels close to the provided exclude_color (RGB) within the tolerance.
+        Sample the background color from a bounding box area in a PDF page.
+
+        Args:
+            pdf_path (str): Path to the PDF file.
+            page_number (int): Page number.
+            bbox (tuple): Bounding box (x0, y0, x1, y1).
+            zoom (int, optional): Zoom factor for sampling.
+            border_width (int, optional): Width of the border area.
+            exclude_color (tuple, optional): RGB color to exclude.
+            tolerance (int, optional): Tolerance for color exclusion.
+
+        Returns:
+            tuple: Normalized RGB color.
         """
-        # Render the page at increased resolution
         doc = fitz.open(pdf_path)
         page = doc[page_number]
         mat = fitz.Matrix(zoom, zoom)
         pix = page.get_pixmap(matrix=mat)
-        from PIL import Image
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-        # Convert bbox from PDF points to pixel coordinates
         x0, y0, x1, y1 = [int(coord * zoom) for coord in bbox]
         cropped = img.crop((x0, y0, x1, y1))
-        arr = np.array(cropped)  # shape: (height, width, 3)
-        height, width, _ = arr.shape
-
-        # Sample border pixels (top, bottom, left, right)
+        arr = np.array(cropped)
+        height, _ , _ = arr.shape
         border_pixels = []
-        # Top
         border_pixels.append(arr[0:border_width, :, :].reshape(-1, 3))
-        # Bottom
         border_pixels.append(arr[-border_width:, :, :].reshape(-1, 3))
         if height > 2 * border_width:
-            # Left
             border_pixels.append(arr[border_width:height-border_width, 0:border_width, :].reshape(-1, 3))
-            # Right
             border_pixels.append(arr[border_width:height-border_width, -border_width:, :].reshape(-1, 3))
         border_pixels = np.concatenate(border_pixels, axis=0)
         pixel_tuples = [tuple(pixel) for pixel in border_pixels]
-
-        # Optionally exclude pixels near the provided font color
         if exclude_color is not None:
-            # Convert exclude_color from normalized (0–1) to 0–255
             target = tuple(int(c * 255) for c in exclude_color)
             filtered_pixels = [
                 p for p in pixel_tuples
@@ -75,55 +83,33 @@ class PDFGenerator(BaseOutputGenerator):
                 mode_color = Counter(pixel_tuples).most_common(1)[0][0]
         else:
             mode_color = Counter(pixel_tuples).most_common(1)[0][0]
-
         normalized_color = tuple(c / 255 for c in mode_color)
         doc.close()
         return normalized_color
 
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Creates a new PDF by duplicating the original, redacting text in extracted areas,
-        and inserting translated text into those areas.
-        
-        Expects `structured_data` to be a dict with a "paragraphs" key, e.g.:
-          {
-            "paragraphs": [
-              {
-                "text": "...",
-                "bbox": [...],
-                "page": 0,
-                "font": "...",
-                "size": 12,
-                "color": 0xRRGGBB,
-                "bold": bool,
-                "italic": bool,
-                "spacing": float,
-                ...
-              },
-              ...
-            ]
-          }
+        Generate a PDF by redacting original text and inserting translated text.
+
+        Args:
+            structured_data (dict): Translated content with paragraph metadata.
+            original_filepath (str): Path to the original PDF.
+            output_filepath (str): Path to save the modified PDF.
         """
         doc = fitz.open(original_filepath)
-
-        # === STEP 1: Redact original text ===
+        # Step 1: Redact original text
         for para in structured_data.get("paragraphs", []):
             page_num = para["page"]
             bbox = para["bbox"]
-            # Slightly shrink the bbox to avoid overlapping boundaries
-            # (some margin around the bounding box)
             if (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
                 bbox = (bbox[0] + 2, bbox[1] + 2, bbox[2] - 2, bbox[3] - 2)
             page = doc[page_num]
             redaction_rect = fitz.Rect(bbox)
-
-            # Convert color_int to normalized RGB => exclude_color
             color_int = para["color"]
             r = (color_int >> 16) & 0xFF
             g = (color_int >> 8) & 0xFF
             b = color_int & 0xFF
             font_color = (r / 255, g / 255, b / 255)
-
             fill_color = self.get_background_color_from_bbox(
                 original_filepath,
                 page_num,
@@ -133,19 +119,15 @@ class PDFGenerator(BaseOutputGenerator):
                 tolerance=20
             )
             page.add_redact_annot(redaction_rect, fill=fill_color)
-
-        # Apply redactions on each page
         for page in doc:
             page.apply_redactions()
-
-        # === STEP 2: Insert translated text ===
+        # Step 2: Insert translated text
         for para in structured_data.get("paragraphs", []):
             page_num = para["page"]
             page = doc[page_num]
             bbox = para["bbox"]
             if (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
                 bbox = (bbox[0] + 2, bbox[1] + 2, bbox[2] - 2, bbox[3] - 2)
-
             x0, y0, x1, y1 = bbox
             text = para["text"]
             font = para["font"]
@@ -154,17 +136,12 @@ class PDFGenerator(BaseOutputGenerator):
             is_bold = para.get("bold", False)
             is_italic = para.get("italic", False)
             spacing = para.get("spacing", 1)
-
             if not text.strip():
                 continue
-
-            # Convert color int => normalized RGB
             r = (color_int >> 16) & 0xFF
             g = (color_int >> 8) & 0xFF
             b = color_int & 0xFF
             color_rgb = (r / 255, g / 255, b / 255)
-
-            # Ensure valid font
             valid_fonts = ["Helvetica", "Courier"]
             if font not in valid_fonts:
                 if is_bold and is_italic:
@@ -176,18 +153,14 @@ class PDFGenerator(BaseOutputGenerator):
                 else:
                     font = "Times-Roman"
             else:
-                # If using a valid built-in font:
                 if is_bold and is_italic:
                     font += "-BoldOblique"
                 elif is_bold:
                     font += "-Bold"
                 elif is_italic:
                     font += "-Oblique"
-
-            # Insert text in a slightly padded rectangle
             padding = 20
             text_box_rect = fitz.Rect(x0 + padding / 4, y0, x1 + padding, y1 + padding)
-
             page.insert_textbox(
                 text_box_rect,
                 text,
@@ -195,24 +168,45 @@ class PDFGenerator(BaseOutputGenerator):
                 fontname=font,
                 color=color_rgb,
                 lineheight=spacing,
-                align=0  # left aligned
+                align=0
             )
-
-        # === STEP 3: Save the modified PDF ===
-        doc.save(output_filepath)
+        # Step 3: Save the modified PDF with compression
+        doc.save(output_filepath, garbage=4, deflate=True, clean=True)
         doc.close()
         print(f"✅ New PDF created from '{original_filepath}' => '{output_filepath}'")
 
 class DOCXGenerator(BaseOutputGenerator):
+    """
+    Generates a DOCX file with translated content.
+    """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
-        from docx import Document
+        """
+        Generate a DOCX document from the translated paragraphs.
+
+        Args:
+            structured_data (dict): Translated content.
+            original_filepath (str): Path to the original file.
+            output_filepath (str): Path to save the DOCX file.
+        """
         doc = Document()
         for para in structured_data.get("paragraphs", []):
             doc.add_paragraph(para["text"])
         doc.save(output_filepath)
+        print(f"✅ New DOCX created from '{original_filepath}' => '{output_filepath}'")
 
 class HTMLGenerator(BaseOutputGenerator):
+    """
+    Generates an HTML file with translated content.
+    """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
+        """
+        Generate an HTML file from the translated paragraphs.
+
+        Args:
+            structured_data (dict): Translated content.
+            original_filepath (str): Path to the original file.
+            output_filepath (str): Path to save the HTML file.
+        """
         html = "<html><body>\n"
         for para in structured_data.get("paragraphs", []):
             html += f"<p>{para['text']}</p>\n"
@@ -221,27 +215,46 @@ class HTMLGenerator(BaseOutputGenerator):
             f.write(html)
 
 class TXTGenerator(BaseOutputGenerator):
+    """
+    Generates a plain text file with translated content.
+    """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
+        """
+        Generate a TXT file from the translated paragraphs.
+
+        Args:
+            structured_data (dict): Translated content.
+            original_filepath (str): Path to the original file.
+            output_filepath (str): Path to save the TXT file.
+        """
         with open(output_filepath, 'w', encoding='utf-8') as f:
             for para in structured_data.get("paragraphs", []):
                 f.write(para["text"] + "\n")
 
 class GeneratorAgent:
     """
-    Agent responsible for generating output files with translated content.
-    Initialized with a file type (e.g., "pdf", "docx", "html", or "txt").
+    Agent responsible for generating output files with the translated content based on file type.
     """
     def __init__(self, file_type: str):
+        """
+        Initialize the generator agent.
+
+        Args:
+            file_type (str): Type of the file ('pdf', 'docx', 'html', or 'txt').
+        """
         self.file_type = file_type
 
     def generate(self, structured_data_dict: dict, original_filepath: str, output_filepath: str):
         """
-        Dispatches to the appropriate generator based on self.file_type.
-        
-        structured_data_dict should contain a 'paragraphs' list inside, e.g.:
-            {
-              "paragraphs": [...]
-            }
+        Generate the output file using the appropriate generator based on the file type.
+
+        Args:
+            structured_data_dict (dict): Structured translated content.
+            original_filepath (str): Path to the original file.
+            output_filepath (str): Path to save the generated file.
+
+        Raises:
+            ValueError: If the file type is unsupported.
         """
         if self.file_type == "pdf":
             generator = PDFGenerator()
@@ -253,5 +266,4 @@ class GeneratorAgent:
             generator = TXTGenerator()
         else:
             raise ValueError(f"Unsupported file type: {self.file_type}")
-
         generator.generate_output(structured_data_dict, original_filepath, output_filepath)

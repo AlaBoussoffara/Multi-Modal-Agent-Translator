@@ -1,36 +1,82 @@
-# extractor_agent.py
+"""
+This module provides classes and functions for extracting structured content 
+from various file types such as PDF, DOCX, HTML, and TXT.
+"""
 
 from abc import ABC, abstractmethod
+from collections import Counter
 import fitz  # PyMuPDF
 import numpy as np
-from collections import Counter
+from docx import Document
+from bs4 import BeautifulSoup
+
+
+def standardize_paragraph(p: dict) -> dict:
+    """
+    Convert a raw paragraph dictionary into a standardized schema.
+
+    Expected keys:
+      - text: paragraph text
+      - bbox: tuple (x0, y0, x1, y1) for location (default for non-PDF)
+      - page: page number (default 0)
+      - font: font name (default "Times-Roman")
+      - size: font size (default 12)
+      - color: color as an integer (default 0x000000)
+      - bold: boolean for bold formatting (default False)
+      - italic: boolean for italic formatting (default False)
+      - spacing: line/paragraph spacing (default 1)
+      - raw_metadata: any additional fields from extraction output
+
+    Args:
+        p (dict): Raw paragraph dictionary.
+
+    Returns:
+        dict: Standardized paragraph dictionary.
+    """
+    standardized = {}
+    standardized["text"] = p.get("text", "")
+    standardized["bbox"] = p.get("bbox", (0, 0, 100, 20))
+    standardized["page"] = p.get("page", 0)
+    standardized["font"] = p.get("font", "Times-Roman")
+    standardized["size"] = p.get("size", 12)
+    standardized["color"] = p.get("color", 0x000000)
+    standardized["bold"] = p.get("bold", False)
+    standardized["italic"] = p.get("italic", False)
+    standardized["spacing"] = p.get("spacing", 1)
+    keys = {"text", "bbox", "page", "font", "size", "color", "bold", "italic", "spacing"}
+    standardized["raw_metadata"] = {k: v for k, v in p.items() if k not in keys}
+    return standardized
 
 class BaseExtractor(ABC):
+    """
+    Abstract base class for content extraction from files.
+    """
     @abstractmethod
     def extract_content(self, filepath: str) -> dict:
         """
-        Extracts structured content (e.g., paragraphs with text and formatting)
-        from a file and returns a standardized dictionary with a 'paragraphs' key.
+        Extract structured content from a file and return a standardized dictionary 
+        containing a 'paragraphs' key with a list of standardized paragraph dictionaries.
+
+        Args:
+            filepath (str): Path to the file.
+
+        Returns:
+            dict: Dictionary with key 'paragraphs'.
         """
-        pass
 
 class PDFExtractor(BaseExtractor):
     """
-    Extractor for PDF files using PyMuPDF. Groups text blocks into paragraphs based on spacing,
-    font differences, and bounding box changes, preserving structure and layout.
+    Extracts content from PDF files using PyMuPDF.
     """
-
-    def get_dominant_font_properties(self, paragraph_blocks: list[dict]) -> dict:
+    def get_dominant_font_properties(self, paragraph_blocks: list) -> dict:
         """
-        Determines the most frequent font properties in a paragraph block list.
+        Determine the most frequent font properties from a list of paragraph blocks.
 
         Args:
-            paragraph_blocks (list of dicts): each block with keys like:
-                'font', 'size', 'color', 'bold', 'italic', 'char_spacing'.
+            paragraph_blocks (list): List of blocks containing font information.
 
         Returns:
-            dict: The dominant properties, including 'font', 'size', 'color', 'bold', 'italic',
-                  'char_spacing'.
+            dict: Dominant font properties.
         """
         def most_frequent(items):
             return Counter(items).most_common(1)[0][0] if items else None
@@ -44,29 +90,26 @@ class PDFExtractor(BaseExtractor):
 
         return {
             "font": most_frequent(fonts),
-            "size": min(sizes),  # Use the smallest size among blocks
+            "size": min(sizes),
             "color": most_frequent(colors),
             "bold": most_frequent(bold_flags),
             "italic": most_frequent(italic_flags),
             "char_spacing": np.mean(char_spacings),
         }
 
-    def extract_content(self, pdf_path: str, tolerance_factor: float = 2.5) -> dict:
+    def extract_content(self, filepath: str, tolerance_factor: float = 2.5) -> dict:
         """
-        Extracts paragraphs from a PDF while preserving structure and layout.
-
-        - Processes text blocks from the PDF
-        - Groups them into paragraphs based on spacing, font properties, bounding boxes, etc.
+        Extract structured content from a PDF file.
 
         Args:
-            pdf_path (str): Path to the input PDF
-            tolerance_factor (float): Factor to adjust spacing threshold
+            filepath (str): Path to the PDF file.
+            tolerance_factor (float, optional): Factor to determine paragraph separation.
+            Default is 2.5.
 
         Returns:
-            dict with:
-              "paragraphs": a list of paragraph dicts (keys like "text", "bbox", "font", etc.)
+            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
         """
-        doc = fitz.open(pdf_path)
+        doc = fitz.open(filepath)
         structured_data = []
 
         for page_num, page in enumerate(doc):
@@ -104,7 +147,6 @@ class PDFExtractor(BaseExtractor):
                         "char_spacing": char_spacing,
                     })
 
-            # Determine an automatic spacing threshold
             line_gaps = [
                 raw_blocks[i+1]["bbox"][1] - raw_blocks[i]["bbox"][3]
                 for i in range(len(raw_blocks) - 1)
@@ -117,7 +159,6 @@ class PDFExtractor(BaseExtractor):
 
             for i, block in enumerate(raw_blocks):
                 if i == 0:
-                    # Start first paragraph
                     current_paragraph = {
                         "text": block["text"],
                         "bbox": block["bbox"],
@@ -142,12 +183,10 @@ class PDFExtractor(BaseExtractor):
                     or (abs(current_paragraph["size"] - block["size"]) > 1)
                     or (vertical_gap > auto_threshold)
                 ):
-                    # Finalize current paragraph
                     dominant_props = self.get_dominant_font_properties(paragraph_properties)
                     current_paragraph.update(dominant_props)
                     paragraphs.append(current_paragraph)
 
-                    # Start a new paragraph
                     current_paragraph = {
                         "text": block["text"],
                         "bbox": block["bbox"],
@@ -162,7 +201,6 @@ class PDFExtractor(BaseExtractor):
                     }
                     paragraph_properties = [block]
                 else:
-                    # Continue the same paragraph
                     current_paragraph["spacing"] = max(
                         1.75 * vertical_gap / block["size"],
                         current_paragraph["spacing"],
@@ -176,7 +214,6 @@ class PDFExtractor(BaseExtractor):
                     )
                     paragraph_properties.append(block)
 
-            # Final paragraph in this page
             if current_paragraph:
                 dominant_props = self.get_dominant_font_properties(paragraph_properties)
                 current_paragraph.update(dominant_props)
@@ -185,30 +222,80 @@ class PDFExtractor(BaseExtractor):
             structured_data.extend(paragraphs)
 
         doc.close()
-        return {"paragraphs": structured_data}
+        standardized = [standardize_paragraph(p) for p in structured_data]
+        return {"paragraphs": standardized}
 
 class DOCXExtractor(BaseExtractor):
+    """
+    Extracts content from DOCX files using python-docx.
+    """
     def extract_content(self, filepath: str) -> dict:
-        import docx
-        document = docx.Document(filepath)
+        """
+        Extract content from a DOCX file.
+
+        Args:
+            filepath (str): Path to the DOCX file.
+
+        Returns:
+            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
+        """
+        document = Document(filepath)
         paragraphs = []
         for para in document.paragraphs:
-            if para.text.strip():
-                paragraphs.append({
-                    "text": para.text.strip(),
-                    "bbox": (0, 0, 100, 20),
-                    "page": 0,
-                    "font": "Times-Roman",
-                    "size": 12,
-                    "color": 0x000000,
-                    "bold": para.runs[0].bold if para.runs else False,
-                    "italic": para.runs[0].italic if para.runs else False,
-                })
-        return {"paragraphs": paragraphs}
+            if not para.runs:
+                continue
+            merged_text = ""
+            current_text = ""
+            current_style = (
+                para.runs[0].bold,
+                para.runs[0].italic,
+                para.runs[0].underline,
+                para.runs[0].font.name,
+                para.runs[0].font.size,
+                para.runs[0].font.color.rgb
+            )
+            for run in para.runs:
+                style = (
+                    run.bold,
+                    run.italic,
+                    run.underline,
+                    run.font.name,
+                    run.font.size,
+                    run.font.color.rgb
+                )
+                if style == current_style:
+                    current_text += run.text
+                else:
+                    merged_text += current_text
+                    current_text = run.text
+                    current_style = style
+            merged_text += current_text
+            paragraphs.append({
+                "text": merged_text,
+                "bbox": (0, 0, 100, 20),
+                "page": 0,
+                "font": "Times-Roman",
+                "size": 12,
+                "color": 0x000000,
+                "bold": para.runs[0].bold if para.runs else False,
+                "italic": para.runs[0].italic if para.runs else False,
+            })
+        return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
 
 class HTMLExtractor(BaseExtractor):
+    """
+    Extracts content from HTML files using BeautifulSoup.
+    """
     def extract_content(self, filepath: str) -> dict:
-        from bs4 import BeautifulSoup
+        """
+        Extract content from an HTML file.
+
+        Args:
+            filepath (str): Path to the HTML file.
+
+        Returns:
+            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
+        """
         with open(filepath, 'r', encoding='utf-8') as f:
             html = f.read()
         soup = BeautifulSoup(html, 'html.parser')
@@ -226,13 +313,25 @@ class HTMLExtractor(BaseExtractor):
                     "bold": False,
                     "italic": False,
                 })
-        return {"paragraphs": paragraphs}
+        return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
 
 class TXTExtractor(BaseExtractor):
+    """
+    Extracts content from plain text files.
+    """
     def extract_content(self, filepath: str) -> dict:
+        """
+        Extract content from a TXT file.
+
+        Args:
+            filepath (str): Path to the text file.
+
+        Returns:
+            dict: Dictionary containing a single standardized paragraph under the 'paragraphs' key.
+        """
         with open(filepath, 'r', encoding='utf-8') as f:
             text = f.read().strip()
-        return {"paragraphs": [{
+        return {"paragraphs": [standardize_paragraph({
             "text": text,
             "bbox": (0, 0, 100, 20),
             "page": 0,
@@ -241,27 +340,37 @@ class TXTExtractor(BaseExtractor):
             "color": 0x000000,
             "bold": False,
             "italic": False,
-        }]}
+        })]}
 
 class ExtractorAgent:
     """
-    Agent that uses a file_type provided at initialization
-    to dispatch to the correct extractor.
+    Agent for extracting structured content from files based on file type.
     """
     def __init__(self, file_type: str):
         """
+        Initialize the extractor agent.
+
         Args:
-            file_type (str): The file type (pdf, docx, html, txt, etc.).
+            file_type (str): Type of the file ('pdf', 'docx', 'html', or 'txt').
         """
         self.file_type = file_type
 
     def extract(self, filepath: str) -> dict:
         """
-        Dispatch to the correct extractor based on the stored file_type.
+        Extract structured content from the given file.
+
+        Args:
+            filepath (str): Path to the file.
+
+        Returns:
+            dict: Dictionary with a key 'paragraphs' containing standardized paragraphs.
+
+        Raises:
+            ValueError: If the file type is unsupported.
         """
         if self.file_type == "pdf":
             extractor = PDFExtractor()
-            return extractor.extract_content(filepath, tolerance_factor=2.5)
+            return extractor.extract_content(filepath)
         elif self.file_type == "docx":
             extractor = DOCXExtractor()
         elif self.file_type == "html":
@@ -270,5 +379,4 @@ class ExtractorAgent:
             extractor = TXTExtractor()
         else:
             raise ValueError(f"Unsupported file type: {self.file_type}")
-
         return extractor.extract_content(filepath)
