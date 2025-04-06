@@ -25,7 +25,7 @@ llm = ChatBedrock(
 )
 logging.getLogger("langchain_aws").setLevel(logging.ERROR)
 
-def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, target_language="french", progress_callback=None):
+def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, target_language="french", progress_callback=None, evaluate=True):
     """
     Execute the translation pipeline using LangGraph.
 
@@ -34,7 +34,7 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
       - Content extraction
       - Translation
       - Generation of the output file
-      - Evaluation of the translation quality
+      - Optional evaluation of the translation quality
 
     Args:
         src_filepath (str): Path to the input file.
@@ -42,22 +42,19 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         ref_filepath (str): Path to the reference file for evaluation.
         target_language (str, optional): Target language for translation. Default is 'french'.
         progress_callback (callable, optional): Function to update progress status.
+        evaluate (bool, optional): Whether to perform evaluation. Default is True.
 
     Returns:
-        list: Evaluation results containing COMET scores.
+        list: Evaluation results containing COMET scores (if evaluation is enabled).
     """
     print("[LANGGRAPH] Starting LangGraph pipeline...")
 
-    # Download the COMET model for evaluation
-    comet_model_path = download_model("Unbabel/wmt22-comet-da")
+    # Download the COMET model for evaluation (only if evaluation is enabled)
+    comet_model_path = None
+    if evaluate:
+        comet_model_path = download_model("Unbabel/wmt22-comet-da")
 
     class OverallState(TypedDict):
-        """Overall state for the pipeline.
-        This state is passed between nodes in the pipeline.
-
-        Args:
-            TypedDict (_type_): description of the overall state
-        """
         src_filepath: str
         mt_filepath: str
         ref_filepath: str
@@ -68,22 +65,11 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         evaluation_results: list
 
     class InputState(TypedDict):
-        """Input state for the pipeline.
-
-        Args:
-            TypedDict (_type_): description of the input state
-        """
         src_filepath: str
         mt_filepath: str
         ref_filepath: str
 
     class OutputState(TypedDict):
-        """Output state for the pipeline.
-        This state is returned at the end of the pipeline.
-
-        Args:
-            TypedDict (_type_): description of the output state
-        """
         mt_filepath: str
         evaluation_results: list
 
@@ -94,9 +80,15 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
     def extract_node(state: OverallState) -> OverallState:
         extractor = ExtractorAgent(state["file_type"])
         original_content = extractor.extract(state["src_filepath"])
-        ref_content = extractor.extract(state["ref_filepath"])
         state["extracted_content"] = original_content
-        state["ref_content"] = ref_content
+
+        # Lire le fichier de référence uniquement si l'évaluation est activée
+        if evaluate:
+            ref_content = extractor.extract(state["ref_filepath"])
+            state["ref_content"] = ref_content
+        else:
+            state["ref_content"] = None  # Pas de contenu de référence si l'évaluation est désactivée
+
         return state
 
     def translate_node(state: OverallState) -> OverallState:
@@ -127,28 +119,42 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         state["evaluation_results"] = evaluation_results
         return {"mt_filepath": state["mt_filepath"], "evaluation_results": evaluation_results}
 
+    print(src_filepath, mt_filepath, ref_filepath)
     builder = StateGraph(OverallState, input=InputState, output=OutputState)
     builder.add_node("TypeDetectionNode", type_detection_node)
     builder.add_node("ExtractNode", extract_node)
     builder.add_node("TranslateNode", translate_node)
     builder.add_node("GenerateNode", generate_node)
-    builder.add_node("EvaluateNode", evaluate_node)
+
+    # Add the evaluation node only if evaluation is enabled
+    if evaluate:
+        builder.add_node("EvaluateNode", evaluate_node)
+        builder.add_edge("GenerateNode", "EvaluateNode")
+        builder.add_edge("EvaluateNode", END)
+    else:
+        builder.add_edge("GenerateNode", END)
+
     builder.add_edge(START, "TypeDetectionNode")
     builder.add_edge("TypeDetectionNode", "ExtractNode")
     builder.add_edge("ExtractNode", "TranslateNode")
     builder.add_edge("TranslateNode", "GenerateNode")
-    builder.add_edge("GenerateNode", "EvaluateNode")
-    builder.add_edge("EvaluateNode", END)
 
     graph = builder.compile()
+    print({
+        "src_filepath": src_filepath,
+        "mt_filepath": mt_filepath,
+        "ref_filepath": ref_filepath
+    })
     final_state = graph.invoke({
         "src_filepath": src_filepath,
         "mt_filepath": mt_filepath,
         "ref_filepath": ref_filepath
     })
     print(f"[LANGGRAPH] Done! Output => {final_state['mt_filepath']}")
-    print("Evaluation Results:", final_state["evaluation_results"][0]["COMET Score"])
-    return final_state["evaluation_results"]
+    if evaluate:
+        print("Evaluation Results:", final_state["evaluation_results"][0]["COMET Score"])
+        return final_state["evaluation_results"]
+    return None
 
 if __name__ == "__main__":
     input_dir = "src_documents"
@@ -156,10 +162,14 @@ if __name__ == "__main__":
     ref_dir = "ref_translations"
     os.makedirs(output_dir, exist_ok=True)
 
-    input_file = "SQ_15830852.pdf"
+    input_file = "Consigne_preetude_poleIA_1A.pdf"
     src_filepath = os.path.join(input_dir, input_file)
     file_root, file_ext = os.path.splitext(input_file)
     mt_filepath = os.path.join(output_dir, f"{file_root}_translated{file_ext}")
     ref_filepath = os.path.join(ref_dir, input_file)
 
-    print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="french"))
+    # Example: Run the pipeline with evaluation enabled
+    # print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="french", evaluate=True))
+
+    # Example: Run the pipeline without evaluation
+    print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="french", evaluate=False))

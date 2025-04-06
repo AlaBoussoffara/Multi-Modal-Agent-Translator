@@ -100,14 +100,14 @@ if st.session_state.translation_in_progress and not st.session_state.translation
             temp_input_path = temp_input.name
         
         temp_output_path = temp_input_path.replace(file_ext, f"_translated{file_ext}")
-        ref_file_path = os.path.join("ref_translations", uploaded_file.name)
+        ref_file_path = os.path.join("mt_outputs", uploaded_file.name)
         update_log(f"Processing file: {uploaded_file.name}")
         status_text.text(f"Translating {uploaded_file.name}...")
         
         try:
-            evaluation_results = langgraph_pipeline(temp_input_path, temp_output_path, ref_file_path, target_language, progress_callback)
+            evaluation_results = langgraph_pipeline(temp_input_path, temp_output_path, ref_file_path, target_language, progress_callback, False)
             update_log(f"Translation complete for {uploaded_file.name}.")
-            update_log(f"Evaluation results: {evaluation_results[0]['COMET Score']}")
+            # update_log(f"Evaluation results: {evaluation_results[0]['COMET Score']}")
             st.session_state.translated_files.append({
                 "name": translated_file_name,
                 "path": temp_output_path
