@@ -70,11 +70,49 @@ class EvaluatorAgent():
         df.to_csv(output_file, index=False)
         print("Processing complete! Results saved in 'evaluation_results.csv'.")
 
+    def evaluate_without_reference(self, original_file_path, translated_file_path):
+        """
+        Evaluate a single pair of original and translated files without a reference.
+        """
+        # Extract text from the original file
+        if original_file_path.endswith((".pdf", ".PDF")):
+            source_text = self.extract_text_from_pdf(original_file_path)
+        elif original_file_path.endswith(".docx"):
+            source_text = self.extract_text_from_docx(original_file_path)
+        else:
+            raise ValueError("Unsupported file format for the original file.")
+
+        # Extract text from the translated file
+        if translated_file_path.endswith((".pdf", ".PDF")):
+            translated_text = self.extract_text_from_pdf(translated_file_path)
+        elif translated_file_path.endswith(".docx"):
+            translated_text = self.extract_text_from_docx(translated_file_path)
+        else:
+            raise ValueError("Unsupported file format for the translated file.")
+
+        # Prepare data for COMET
+        data = [{"src": source_text, "mt": translated_text}]
+        print(data)
+
+        # Get the COMET score
+        score = self.model.predict(data)["scores"][0]
+
+        print(f"COMET Score (without reference): {score}")
+        return score
+
 if __name__ == "__main__":
     # Example usage
-    model_path = download_model("Unbabel/wmt22-comet-da")  # Path to your COMET model
+    # model_path = download_model("Unbabel/wmt22-comet-da")  # Path to your COMET model
+    model_path = download_model("Unbabel/wmt20-comet-qe-da")
     original_files_path = "documents_a_traduire"
     translated_files_path = "documents_traduits"
     ref_files_path = "references"
     evaluator = EvaluatorAgent(model_path, original_files_path, translated_files_path, ref_files_path)
-    evaluator.evaluate_documents()
+    
+    # Evaluate all documents with references
+    # evaluator.evaluate_documents()
+
+    # Test evaluation without reference for two specific files
+    # original_file = "documents_a_traduire/SQ_13124846.pdf"  # Replace with the actual path to your original file
+    # translated_file = "documents_traduits/SQ_15830852.pdf"  # Replace with the actual path to your translated file
+    # evaluator.evaluate_without_reference(original_file, translated_file)
