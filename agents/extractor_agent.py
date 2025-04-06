@@ -1,6 +1,6 @@
 """
-This module provides classes and functions for extracting structured content 
-from various file types such as PDF, DOCX, HTML, and TXT.
+Ce module fournit des classes et des fonctions pour extraire du contenu structuré
+à partir de différents types de fichiers tels que PDF, DOCX, HTML et TXT.
 """
 
 from abc import ABC, abstractmethod
@@ -13,25 +13,13 @@ from bs4 import BeautifulSoup
 
 def standardize_paragraph(p: dict) -> dict:
     """
-    Convert a raw paragraph dictionary into a standardized schema.
-
-    Expected keys:
-      - text: paragraph text
-      - bbox: tuple (x0, y0, x1, y1) for location (default for non-PDF)
-      - page: page number (default 0)
-      - font: font name (default "Times-Roman")
-      - size: font size (default 12)
-      - color: color as an integer (default 0x000000)
-      - bold: boolean for bold formatting (default False)
-      - italic: boolean for italic formatting (default False)
-      - spacing: line/paragraph spacing (default 1)
-      - raw_metadata: any additional fields from extraction output
+    Standardise un paragraphe brut en un format structuré.
 
     Args:
-        p (dict): Raw paragraph dictionary.
+        p (dict): Dictionnaire brut contenant les informations du paragraphe.
 
     Returns:
-        dict: Standardized paragraph dictionary.
+        dict: Paragraphe structuré avec des clés standardisées.
     """
     standardized = {}
     standardized["text"] = p.get("text", "")
@@ -47,36 +35,37 @@ def standardize_paragraph(p: dict) -> dict:
     standardized["raw_metadata"] = {k: v for k, v in p.items() if k not in keys}
     return standardized
 
+
 class BaseExtractor(ABC):
     """
-    Abstract base class for content extraction from files.
+    Classe abstraite pour l'extraction de contenu à partir de fichiers.
     """
     @abstractmethod
     def extract_content(self, filepath: str) -> dict:
         """
-        Extract structured content from a file and return a standardized dictionary 
-        containing a 'paragraphs' key with a list of standardized paragraph dictionaries.
+        Extrait le contenu structuré d'un fichier.
 
         Args:
-            filepath (str): Path to the file.
+            filepath (str): Chemin vers le fichier.
 
         Returns:
-            dict: Dictionary with key 'paragraphs'.
+            dict: Dictionnaire contenant une clé 'paragraphs' avec une liste de paragraphes structurés.
         """
+
 
 class PDFExtractor(BaseExtractor):
     """
-    Extracts content from PDF files using PyMuPDF.
+    Extrait le contenu des fichiers PDF en utilisant PyMuPDF.
     """
     def get_dominant_font_properties(self, paragraph_blocks: list) -> dict:
         """
-        Determine the most frequent font properties from a list of paragraph blocks.
+        Détermine les propriétés de police les plus fréquentes dans une liste de blocs de paragraphes.
 
         Args:
-            paragraph_blocks (list): List of blocks containing font information.
+            paragraph_blocks (list): Liste des blocs contenant des informations sur la police.
 
         Returns:
-            dict: Dominant font properties.
+            dict: Propriétés dominantes de la police.
         """
         def most_frequent(items):
             return Counter(items).most_common(1)[0][0] if items else None
@@ -99,15 +88,14 @@ class PDFExtractor(BaseExtractor):
 
     def extract_content(self, filepath: str, tolerance_factor: float = 2.5) -> dict:
         """
-        Extract structured content from a PDF file.
+        Extrait le contenu structuré d'un fichier PDF.
 
         Args:
-            filepath (str): Path to the PDF file.
-            tolerance_factor (float, optional): Factor to determine paragraph separation.
-            Default is 2.5.
+            filepath (str): Chemin vers le fichier PDF.
+            tolerance_factor (float, optionnel): Facteur pour déterminer la séparation des paragraphes.
 
         Returns:
-            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
+            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs'.
         """
         doc = fitz.open(filepath)
         structured_data = []
@@ -147,12 +135,7 @@ class PDFExtractor(BaseExtractor):
                         "char_spacing": char_spacing,
                     })
 
-            line_gaps = [
-                raw_blocks[i+1]["bbox"][1] - raw_blocks[i]["bbox"][3]
-                for i in range(len(raw_blocks) - 1)
-            ]
-            auto_threshold = (min(line_gaps) * tolerance_factor) if line_gaps else 10
-
+            # Regroupe les lignes en paragraphes
             paragraphs = []
             current_paragraph = None
             paragraph_properties = []
@@ -181,7 +164,7 @@ class PDFExtractor(BaseExtractor):
                 if (
                     (current_paragraph["font"] != block["font"])
                     or (abs(current_paragraph["size"] - block["size"]) > 1)
-                    or (vertical_gap > auto_threshold)
+                    or (vertical_gap > tolerance_factor)
                 ):
                     dominant_props = self.get_dominant_font_properties(paragraph_properties)
                     current_paragraph.update(dominant_props)
@@ -201,10 +184,6 @@ class PDFExtractor(BaseExtractor):
                     }
                     paragraph_properties = [block]
                 else:
-                    current_paragraph["spacing"] = max(
-                        1.75 * vertical_gap / block["size"],
-                        current_paragraph["spacing"],
-                    )
                     current_paragraph["text"] += " " + block["text"]
                     current_paragraph["bbox"] = (
                         min(current_paragraph["bbox"][0], block["bbox"][0]),
@@ -225,19 +204,20 @@ class PDFExtractor(BaseExtractor):
         standardized = [standardize_paragraph(p) for p in structured_data]
         return {"paragraphs": standardized}
 
+
 class DOCXExtractor(BaseExtractor):
     """
-    Extracts content from DOCX files using python-docx.
+    Extrait le contenu des fichiers DOCX en utilisant python-docx.
     """
     def extract_content(self, filepath: str) -> dict:
         """
-        Extract content from a DOCX file.
+        Extrait le contenu structuré d'un fichier DOCX.
 
         Args:
-            filepath (str): Path to the DOCX file.
+            filepath (str): Chemin vers le fichier DOCX.
 
         Returns:
-            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
+            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs'.
         """
         document = Document(filepath)
         paragraphs = []
@@ -282,19 +262,20 @@ class DOCXExtractor(BaseExtractor):
             })
         return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
 
+
 class HTMLExtractor(BaseExtractor):
     """
-    Extracts content from HTML files using BeautifulSoup.
+    Extrait le contenu des fichiers HTML en utilisant BeautifulSoup.
     """
     def extract_content(self, filepath: str) -> dict:
         """
-        Extract content from an HTML file.
+        Extrait le contenu structuré d'un fichier HTML.
 
         Args:
-            filepath (str): Path to the HTML file.
+            filepath (str): Chemin vers le fichier HTML.
 
         Returns:
-            dict: Dictionary containing standardized paragraphs under the 'paragraphs' key.
+            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs'.
         """
         with open(filepath, 'r', encoding='utf-8') as f:
             html = f.read()
@@ -315,19 +296,20 @@ class HTMLExtractor(BaseExtractor):
                 })
         return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
 
+
 class TXTExtractor(BaseExtractor):
     """
-    Extracts content from plain text files.
+    Extrait le contenu des fichiers texte brut.
     """
     def extract_content(self, filepath: str) -> dict:
         """
-        Extract content from a TXT file.
+        Extrait le contenu structuré d'un fichier TXT.
 
         Args:
-            filepath (str): Path to the text file.
+            filepath (str): Chemin vers le fichier texte.
 
         Returns:
-            dict: Dictionary containing a single standardized paragraph under the 'paragraphs' key.
+            dict: Dictionnaire contenant un paragraphe structuré sous la clé 'paragraphs'.
         """
         with open(filepath, 'r', encoding='utf-8') as f:
             text = f.read().strip()
@@ -342,31 +324,32 @@ class TXTExtractor(BaseExtractor):
             "italic": False,
         })]}
 
+
 class ExtractorAgent:
     """
-    Agent for extracting structured content from files based on file type.
+    Agent pour extraire le contenu structuré des fichiers en fonction de leur type.
     """
     def __init__(self, file_type: str):
         """
-        Initialize the extractor agent.
+        Initialise l'agent d'extraction.
 
         Args:
-            file_type (str): Type of the file ('pdf', 'docx', 'html', or 'txt').
+            file_type (str): Type du fichier ('pdf', 'docx', 'html', ou 'txt').
         """
         self.file_type = file_type
 
     def extract(self, filepath: str) -> dict:
         """
-        Extract structured content from the given file.
+        Extrait le contenu structuré du fichier donné.
 
         Args:
-            filepath (str): Path to the file.
+            filepath (str): Chemin vers le fichier.
 
         Returns:
-            dict: Dictionary with a key 'paragraphs' containing standardized paragraphs.
+            dict: Dictionnaire contenant des paragraphes structurés.
 
         Raises:
-            ValueError: If the file type is unsupported.
+            ValueError: Si le type de fichier n'est pas pris en charge.
         """
         if self.file_type == "pdf":
             extractor = PDFExtractor()
@@ -378,5 +361,4 @@ class ExtractorAgent:
         elif self.file_type == "txt":
             extractor = TXTExtractor()
         else:
-            raise ValueError(f"Unsupported file type: {self.file_type}")
-        return extractor.extract_content(filepath)
+            raise ValueError(f"Type de fichier non pris en charge : {self.file_type}")

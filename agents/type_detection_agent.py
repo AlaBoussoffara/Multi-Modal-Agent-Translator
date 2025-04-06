@@ -1,31 +1,35 @@
 """
-This module provides functionality to detect the file type based on its extension.
-Classes:
-    TypeDetectionAgent: A class with a method to detect file types.
-Functions:
-    detect_file_type(filepath: str) -> str: A helper function to detect file types.
+Module pour détecter le type de fichier en fonction de son extension.
+
+Classes :
+    TypeDetectionAgent : Classe pour détecter le type de fichier.
+Fonctions :
+    detect_file_type(filepath: str) -> str : Fonction utilitaire pour détecter le type de fichier.
 """
 import os
 
 class TypeDetectionAgent:
     """
-    Agent for detecting the file type based on its extension.
+    Agent pour détecter le type de fichier en fonction de son extension.
 
-    Methods:
-        detect(filepath: str) -> str:
-            Returns a string indicating the file type ('pdf', 'docx', etc.).
+    Méthodes :
+        detect(filepath: str) -> str :
+            Retourne une chaîne indiquant le type de fichier ('pdf', 'docx', etc.).
     """
     def detect(self, filepath: str) -> str:
         """
-        Detect the file type by examining the file extension.
+        Détecte le type de fichier en examinant son extension.
 
         Args:
-            filepath (str): The path to the file.
+            filepath (str): Le chemin vers le fichier.
 
         Returns:
-            str: Detected file type (e.g., 'pdf', 'docx', 'html', 'txt', or 'unknown').
+            str: Type de fichier détecté (par exemple, 'pdf', 'docx', 'html', 'txt', ou 'unknown').
         """
+        # Récupère l'extension du fichier et la convertit en minuscule
         ext = os.path.splitext(filepath)[1].lower()
+
+        # Retourne le type de fichier en fonction de l'extension
         if ext == ".pdf":
             return "pdf"
         elif ext == ".docx":
@@ -39,13 +43,14 @@ class TypeDetectionAgent:
 
 def detect_file_type(filepath: str) -> str:
     """
-    Helper function to detect file type using TypeDetectionAgent.
+    Fonction utilitaire pour détecter le type de fichier en utilisant TypeDetectionAgent.
 
     Args:
-        filepath (str): The path to the file.
+        filepath (str): Le chemin vers le fichier.
 
     Returns:
-        str: Detected file type.
+        str: Type de fichier détecté.
     """
+    # Initialise un agent de détection et retourne le type de fichier
     agent = TypeDetectionAgent()
     return agent.detect(filepath)
