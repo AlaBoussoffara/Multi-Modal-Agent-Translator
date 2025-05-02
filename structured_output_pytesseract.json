@@ -1,0 +1,1487 @@
+[
+  {
+    "page_number": 1,
+    "blocks": [
+      {
+        "block_num": 1,
+        "bbox": [
+          68,
+          33,
+          162,
+          33
+        ],
+        "text": "Machine Translated by Google"
+      },
+      {
+        "block_num": 2,
+        "bbox": [
+          275,
+          320,
+          274,
+          66
+        ],
+        "text": "AUDIT REPORT"
+      },
+      {
+        "block_num": 4,
+        "bbox": [
+          274,
+          1006,
+          192,
+          46
+        ],
+        "text": "WORK EQUIPMENT"
+      },
+      {
+        "block_num": 5,
+        "bbox": [
+          272,
+          1124,
+          144,
+          29
+        ],
+        "text": "Periodic general verification"
+      },
+      {
+        "block_num": 6,
+        "bbox": [
+          1289,
+          680,
+          59,
+          23
+        ],
+        "text": "SAS VESTAS FRANCE BAT LATITUDE AIRPORT PARK 770 AV ALFRED SAUVY 34470 PEROLS"
+      },
+      {
+        "block_num": 8,
+        "bbox": [
+          2032,
+          412,
+          270,
+          41
+        ],
+        "text": "SOCOTEC"
+      },
+      {
+        "block_num": 10,
+        "bbox": [
+          1519,
+          1247,
+          146,
+          20
+        ],
+        "text": "Verification Immat. bearer // reat. |e Recommended Designati : location. Emp a Equipment type esignation Customer wording lacing verified shutdown Lifting ELEVATOR . Wind gear SUSPENDED PowerClimber C01 239655 turbine barrel cot]"
+      },
+      {
+        "block_num": 12,
+        "bbox": [
+          203,
+          2038,
+          227,
+          29
+        ],
+        "text": "Intervention address: SAS VESTAS FRANCE ORMELOTS WIND FARM 10700 CHAMPFLEURY"
+      },
+      {
+        "block_num": 13,
+        "bbox": [
+          205,
+          2444,
+          85,
+          27
+        ],
+        "text": "Case number: 2203EN5G0000002/1000"
+      },
+      {
+        "block_num": 14,
+        "bbox": [
+          205,
+          2491,
+          160,
+          27
+        ],
+        "text": "Designation: Vestas - Ormelots-Periodic general inspection of devices"
+      },
+      {
+        "block_num": 15,
+        "bbox": [
+          206,
+          2525,
+          206,
+          26
+        ],
+        "text": "Intervention number: EN5G02203000000001 14 Report date: 03/24/2022 - Report reference: EN5G0/22/2065"
+      },
+      {
+        "block_num": 16,
+        "bbox": [
+          205,
+          2650,
+          60,
+          27
+        ],
+        "text": "Site reference: 239655 LES ORMELOTS_C01_EDP"
+      },
+      {
+        "block_num": 17,
+        "bbox": [
+          242,
+          2737,
+          7,
+          29
+        ],
+        "text": "!> Presence of observation(s)"
+      },
+      {
+        "block_num": 18,
+        "bbox": [
+          182,
+          2938,
+          67,
+          18
+        ],
+        "text": "1.0.0.1 - EDT573506"
+      },
+      {
+        "block_num": 19,
+        "bbox": [
+          179,
+          2994,
+          60,
+          21
+        ],
+        "text": "ENR Metz Equipment Agency"
+      },
+      {
+        "block_num": 20,
+        "bbox": [
+          181,
+          3033,
+          55,
+          20
+        ],
+        "text": "ENR center - SOCOTEC EQUIPEMENTS - SOCOTEC WOIPPY - 57140 WOIPPY"
+      },
+      {
+        "block_num": 21,
+        "bbox": [
+          179,
+          3071,
+          65,
+          21
+        ],
+        "text": "Such. : (+33)3.87.30.19.86 Email: enr@socotec.com"
+      },
+      {
+        "block_num": 22,
+        "bbox": [
+          179,
+          3140,
+          118,
+          19
+        ],
+        "text": "SOCOTEC EQUIPEMENTS - SAS with capital of 8,500,100 euros - 834 096 695 RCS Versailles"
+      },
+      {
+        "block_num": 23,
+        "bbox": [
+          180,
+          3175,
+          55,
+          19
+        ],
+        "text": "Head office: Mirabeau building - 5 place des Freres Montgolfier"
+      },
+      {
+        "block_num": 24,
+        "bbox": [
+          179,
+          3210,
+          125,
+          23
+        ],
+        "text": "Guyancourt - CS 20732 - 78182 Saint Quentin-en-Yvelines Cedex - FRANCE - www.socotec.fr"
+      },
+      {
+        "block_num": 25,
+        "bbox": [
+          1255,
+          2037,
+          105,
+          22
+        ],
+        "text": "Mission carried out on 03/04/22"
+      },
+      {
+        "block_num": 26,
+        "bbox": [
+          1251,
+          2087,
+          172,
+          27
+        ],
+        "text": "Accompanist: Mr. Julian LASSALLE - Socotec Technician (Autonomy)"
+      },
+      {
+        "block_num": 27,
+        "bbox": [
+          1512,
+          2922,
+          99,
+          21
+        ],
+        "text": "Verifier: Mr CADART Julien Number of pages: 5"
+      },
+      {
+        "block_num": 28,
+        "bbox": [
+          1629,
+          3054,
+          154,
+          21
+        ],
+        "text": "Accreditation"
+      },
+      {
+        "block_num": 29,
+        "bbox": [
+          1632,
+          3088,
+          108,
+          21
+        ],
+        "text": "n°3-1593"
+      },
+      {
+        "block_num": 30,
+        "bbox": [
+          1633,
+          3127,
+          40,
+          21
+        ],
+        "text": "List of locations and scope available on www.cofrac.fr"
+      }
+    ]
+  },
+  {
+    "page_number": 2,
+    "blocks": [
+      {
+        "block_num": 1,
+        "bbox": [
+          68,
+          33,
+          162,
+          33
+        ],
+        "text": "Machine Translated by Google"
+      },
+      {
+        "block_num": 3,
+        "bbox": [
+          2127,
+          275,
+          177,
+          27
+        ],
+        "text": "SOCOTEC"
+      },
+      {
+        "block_num": 4,
+        "bbox": [
+          196,
+          346,
+          113,
+          41
+        ],
+        "text": "END MISSION REPORT"
+      },
+      {
+        "block_num": 5,
+        "bbox": [
+          192,
+          459,
+          34,
+          26
+        ],
+        "text": "At the end of the mission, a verbal report containing the essential information from the verification was produced by the SOCOTEC representative to Elodie MARIE."
+      },
+      {
+        "block_num": 6,
+        "bbox": [
+          193,
+          593,
+          399,
+          43
+        ],
+        "text": "VERIFICATION CONDITIONS"
+      },
+      {
+        "block_num": 7,
+        "bbox": [
+          193,
+          707,
+          60,
+          26
+        ],
+        "text": "The control was carried out in accordance with regulatory or contractual requirements: - by visual examination of the accessible parts or made accessible at the request of the verifier; - by operating tests; - by load tests for lifting devices. The list of verification points is included in the appendix to this report."
+      },
+      {
+        "block_num": 8,
+        "bbox": [
+          192,
+          974,
+          298,
+          43
+        ],
+        "text": "CHECKING THE EQUIPMENT 1. EQUIPMENT IDENTIFICATION"
+      },
+      {
+        "block_num": 9,
+        "bbox": [
+          899,
+          1182,
+          182,
+          22
+        ],
+        "text": "SUSPENDED ELEVATOR"
+      },
+      {
+        "block_num": 10,
+        "bbox": [
+          897,
+          1557,
+          43,
+          14
+        ],
+        "text": "THIS"
+      },
+      {
+        "block_num": 14,
+        "bbox": [
+          205,
+          1191,
+          153,
+          27
+        ],
+        "text": "Designation"
+      },
+      {
+        "block_num": 16,
+        "bbox": [
+          204,
+          1242,
+          190,
+          22
+        ],
+        "text": "Manufacturer / Brand"
+      },
+      {
+        "block_num": 18,
+        "bbox": [
+          204,
+          1340,
+          73,
+          22
+        ],
+        "text": "Serial number"
+      },
+      {
+        "block_num": 20,
+        "bbox": [
+          204,
+          1406,
+          86,
+          15
+        ],
+        "text": "Customer number or reference"
+      },
+      {
+        "block_num": 23,
+        "bbox": [
+          205,
+          1455,
+          92,
+          19
+        ],
+        "text": "Number assigned by Socotec"
+      },
+      {
+        "block_num": 25,
+        "bbox": [
+          201,
+          1499,
+          62,
+          21
+        ],
+        "text": "Year of manufacture"
+      },
+      {
+        "block_num": 27,
+        "bbox": [
+          205,
+          1558,
+          102,
+          27
+        ],
+        "text": "Marking"
+      },
+      {
+        "block_num": 30,
+        "bbox": [
+          179,
+          1658,
+          43,
+          41
+        ],
+        "text": "2. MAIN FEATURES OF THE EQUIPMENT"
+      },
+      {
+        "block_num": 31,
+        "bbox": [
+          203,
+          1760,
+          92,
+          27
+        ],
+        "text": "Weight and position of ballast Located under the lower platform on the suspension and safety cables. Configuration suspended and guided by cables"
+      },
+      {
+        "block_num": 32,
+        "bbox": [
+          202,
+          1865,
+          129,
+          21
+        ],
+        "text": "Additional characteristics of the stems Steel beam Gripping or load-supporting equipment Full-walled basket"
+      },
+      {
+        "block_num": 33,
+        "bbox": [
+          204,
+          2021,
+          109,
+          35
+        ],
+        "text": "Hangers Lifting cable: 1 strand diameter 8.40 mm / Break > 50kN Safety cable: 1 strand diameter 8.40 mm / Break > 50kN"
+      },
+      {
+        "block_num": 34,
+        "bbox": [
+          202,
+          2126,
+          73,
+          22
+        ],
+        "text": "Other features Elevator integrated into a wind turbine:"
+      },
+      {
+        "block_num": 35,
+        "bbox": [
+          897,
+          2177,
+          133,
+          27
+        ],
+        "text": "-Equipped with a lifting gear motor fixed on a bolted steel structural stirrup"
+      },
+      {
+        "block_num": 36,
+        "bbox": [
+          897,
+          2226,
+          49,
+          22
+        ],
+        "text": "-Lift height: 90.00 m -Travel speed: 17.00 m/min -Power: 1.3 kW -Secure access to the cabin via 2-part sliding door -1 secure tower base landing and 1 secure terminal landing -Fixed control station -2 EPI anchor points on interior stirrup + 1 point outside the cabin -Guidance: 2 strands diameter 12.00 mm -TITAN parachute type anti-fall device: 4211305 -Low anti-crushing device + high overtravel -Manual emergency descent device -Hours: 18.90"
+      },
+      {
+        "block_num": 37,
+        "bbox": [
+          204,
+          2832,
+          125,
+          21
+        ],
+        "text": "Maximum Payable Load (CMU) - Maximum 240 kg / 2 people Capacity - Abacus (Extracts) 3. MAIN SAFETY DEVICES PRESENT"
+      },
+      {
+        "block_num": 40,
+        "bbox": [
+          205,
+          3109,
+          65,
+          24
+        ],
+        "text": "Lifting movement travel limiters Up and down"
+      },
+      {
+        "block_num": 41,
+        "bbox": [
+          202,
+          3186,
+          73,
+          22
+        ],
+        "text": "Other travel limiters on High (over-travel) and low (anti-crush)"
+      },
+      {
+        "block_num": 44,
+        "bbox": [
+          178,
+          3279,
+          64,
+          21
+        ],
+        "text": "Case No: 2203EN5G0000002/1000 / Report reference: EN5G0/22/2065"
+      },
+      {
+        "block_num": 45,
+        "bbox": [
+          181,
+          3313,
+          82,
+          21
+        ],
+        "text": "Nature of the mission: Periodic general verification 2/5 Verification location: SAS VESTAS FRANCE"
+      }
+    ]
+  },
+  {
+    "page_number": 3,
+    "blocks": [
+      {
+        "block_num": 1,
+        "bbox": [
+          68,
+          33,
+          162,
+          33
+        ],
+        "text": "Machine Translated by Google"
+      },
+      {
+        "block_num": 2,
+        "bbox": [
+          204,
+          350,
+          58,
+          25
+        ],
+        "text": "lifting movements (off-travel, over-travel, etc.) Monitoring of forces generated by the load Line slack detector and associated parachute system Detection of presence of obstacle when"
+      },
+      {
+        "block_num": 3,
+        "bbox": [
+          202,
+          623,
+          129,
+          23
+        ],
+        "text": "descending"
+      },
+      {
+        "block_num": 4,
+        "bbox": [
+          204,
+          671,
+          53,
+          18
+        ],
+        "text": "Load descent overspeed Device for attaching"
+      },
+      {
+        "block_num": 5,
+        "bbox": [
+          205,
+          724,
+          102,
+          18
+        ],
+        "text": "individual protection against falls from height (excluding \"lifeline\")"
+      },
+      {
+        "block_num": 6,
+        "bbox": [
+          205,
+          841,
+          76,
+          19
+        ],
+        "text": "Device for controlling the operation of the device upon closing of an access control device"
+      },
+      {
+        "block_num": 7,
+        "bbox": [
+          202,
+          959,
+          64,
+          19
+        ],
+        "text": "Other safety device(s)"
+      },
+      {
+        "block_num": 10,
+        "bbox": [
+          2127,
+          275,
+          177,
+          27
+        ],
+        "text": "SOCOTEC"
+      },
+      {
+        "block_num": 11,
+        "bbox": [
+          901,
+          428,
+          97,
+          19
+        ],
+        "text": "Indicator and load limiter (set at CMU +25% according to manufacturer data)"
+      },
+      {
+        "block_num": 12,
+        "bbox": [
+          896,
+          509,
+          49,
+          19
+        ],
+        "text": "With automatic mechanical stop system with overspeed detection Electromechanical detection with movement stop"
+      },
+      {
+        "block_num": 13,
+        "bbox": [
+          896,
+          669,
+          50,
+          19
+        ],
+        "text": "With automatic mechanical stop system with overspeed detection"
+      },
+      {
+        "block_num": 14,
+        "bbox": [
+          900,
+          721,
+          113,
+          19
+        ],
+        "text": "Dedicated anchor points"
+      },
+      {
+        "block_num": 15,
+        "bbox": [
+          899,
+          839,
+          84,
+          25
+        ],
+        "text": "Closing detection of the cabin door and landing doors"
+      },
+      {
+        "block_num": 17,
+        "bbox": [
+          900,
+          958,
+          128,
+          25
+        ],
+        "text": "Emergency braking"
+      },
+      {
+        "block_num": 18,
+        "bbox": [
+          898,
+          1007,
+          88,
+          20
+        ],
+        "text": "Manual recovery steering wheel"
+      },
+      {
+        "block_num": 20,
+        "bbox": [
+          179,
+          1104,
+          42,
+          41
+        ],
+        "text": "4. SPECIAL VERIFICATION CONDITIONS"
+      },
+      {
+        "block_num": 21,
+        "bbox": [
+          205,
+          1212,
+          120,
+          25
+        ],
+        "text": "Regulation taken as reference Regulatory frequency (months) Frequency chosen by the customer (months)"
+      },
+      {
+        "block_num": 22,
+        "bbox": [
+          203,
+          1362,
+          120,
+          19
+        ],
+        "text": "Conditions for carrying out the verification"
+      },
+      {
+        "block_num": 23,
+        "bbox": [
+          202,
+          1421,
+          56,
+          19
+        ],
+        "text": "Time required for verification"
+      },
+      {
+        "block_num": 24,
+        "bbox": [
+          205,
+          1467,
+          128,
+          19
+        ],
+        "text": "Documents required for verification"
+      },
+      {
+        "block_num": 25,
+        "bbox": [
+          204,
+          1579,
+          68,
+          19
+        ],
+        "text": "Loads and their handling means necessary for verification"
+      },
+      {
+        "block_num": 26,
+        "bbox": [
+          202,
+          1652,
+          79,
+          19
+        ],
+        "text": "Secure testing area required for verification"
+      },
+      {
+        "block_num": 27,
+        "bbox": [
+          203,
+          1791,
+          126,
+          19
+        ],
+        "text": "Verification Location/Location"
+      },
+      {
+        "block_num": 28,
+        "bbox": [
+          205,
+          1844,
+          146,
+          25
+        ],
+        "text": "Document(s) presented"
+      },
+      {
+        "block_num": 30,
+        "bbox": [
+          205,
+          1739,
+          75,
+          19
+        ],
+        "text": "Means of access necessary for verification Means of acce:"
+      },
+      {
+        "block_num": 31,
+        "bbox": [
+          896,
+          1210,
+          66,
+          19
+        ],
+        "text": "Order of 01/03/2004 (amended) and article R4323-23 of the Labor Code"
+      },
+      {
+        "block_num": 32,
+        "bbox": [
+          897,
+          1368,
+          76,
+          19
+        ],
+        "text": "Device in service, operating tests carried out Device availability time suitable for verification"
+      },
+      {
+        "block_num": 33,
+        "bbox": [
+          900,
+          1472,
+          128,
+          19
+        ],
+        "text": "Documents made available to the device suitable for verification"
+      },
+      {
+        "block_num": 34,
+        "bbox": [
+          202,
+          1526,
+          89,
+          24
+        ],
+        "text": "Support necessary for verification Personnel ensuring the driving and operation of the device present"
+      },
+      {
+        "block_num": 35,
+        "bbox": [
+          899,
+          1578,
+          68,
+          19
+        ],
+        "text": "Loads and handling means made available here"
+      },
+      {
+        "block_num": 36,
+        "bbox": [
+          898,
+          1658,
+          92,
+          25
+        ],
+        "text": "Security conditions suitable for verification"
+      },
+      {
+        "block_num": 37,
+        "bbox": [
+          873,
+          1744,
+          19,
+          14
+        ],
+        "text": "ss present suitable for verification Wind turbine barrel C01"
+      },
+      {
+        "block_num": 38,
+        "bbox": [
+          900,
+          1836,
+          129,
+          19
+        ],
+        "text": "Instructions for use - Declaration of conformity"
+      },
+      {
+        "block_num": 40,
+        "bbox": [
+          182,
+          1940,
+          41,
+          41
+        ],
+        "text": "5. CONDITIONS FOR CARRYING OUT LOAD TESTS"
+      },
+      {
+        "block_num": 41,
+        "bbox": [
+          205,
+          2046,
+          59,
+          19
+        ],
+        "text": "Mass of test loads made available (kg)"
+      },
+      {
+        "block_num": 42,
+        "bbox": [
+          898,
+          2039,
+          41,
+          19
+        ],
+        "text": "300"
+      },
+      {
+        "block_num": 44,
+        "bbox": [
+          204,
+          2126,
+          54,
+          19
+        ],
+        "text": "Load test configuration(s) (mass, range, angle, hauling, stabilizers, etc.)"
+      },
+      {
+        "block_num": 45,
+        "bbox": [
+          899,
+          2125,
+          61,
+          19
+        ],
+        "text": "Tests of all mechanisms at 240 kg. Test of the device for placing and maintaining the load at 240 kg. Test according to manufacturer's instructions for the parachute device at 240 kg."
+      },
+      {
+        "block_num": 46,
+        "bbox": [
+          900,
+          2276,
+          54,
+          19
+        ],
+        "text": "Load limiter test according to manufacturer's instructions at 300 kg."
+      },
+      {
+        "block_num": 48,
+        "bbox": [
+          181,
+          2372,
+          42,
+          42
+        ],
+        "text": "6. RESULT OF THE VERIFICATION"
+      },
+      {
+        "block_num": 49,
+        "bbox": [
+          180,
+          2470,
+          61,
+          27
+        ],
+        "text": "The checks carried out within the limits of this mission have highlighted anomalies or defects which must be remedied as soon as"
+      },
+      {
+        "block_num": 50,
+        "bbox": [
+          181,
+          2520,
+          139,
+          33
+        ],
+        "text": "possible."
+      },
+      {
+        "block_num": 51,
+        "bbox": [
+          216,
+          2651,
+          90,
+          19
+        ],
+        "text": "Chassis - Frame - Structure - Carrier / Trolley -"
+      },
+      {
+        "block_num": 52,
+        "bbox": [
+          217,
+          2734,
+          77,
+          19
+        ],
+        "text": "Rollers - Guidance - Slides"
+      },
+      {
+        "block_num": 53,
+        "bbox": [
+          679,
+          2657,
+          43,
+          19
+        ],
+        "text": "The tension of the guide cables is insufficient."
+      },
+      {
+        "block_num": 54,
+        "bbox": [
+          681,
+          2699,
+          93,
+          19
+        ],
+        "text": "Resume the cable tension, following the instructions in the manufacturer's instructions."
+      },
+      {
+        "block_num": 57,
+        "bbox": [
+          178,
+          3279,
+          64,
+          21
+        ],
+        "text": "Case No: 2203EN5G0000002/1000 / Report reference: EN5G0/22/2065"
+      },
+      {
+        "block_num": 58,
+        "bbox": [
+          181,
+          3313,
+          82,
+          21
+        ],
+        "text": "Nature of the mission: Periodic general verification Verification location: SAS VESTAS FRANCE"
+      },
+      {
+        "block_num": 59,
+        "bbox": [
+          2251,
+          3323,
+          54,
+          31
+        ],
+        "text": "3/5"
+      }
+    ]
+  },
+  {
+    "page_number": 4,
+    "blocks": [
+      {
+        "block_num": 1,
+        "bbox": [
+          68,
+          33,
+          162,
+          33
+        ],
+        "text": "Machine Translated by Google"
+      },
+      {
+        "block_num": 3,
+        "bbox": [
+          2126,
+          275,
+          178,
+          27
+        ],
+        "text": "SOCOTEC"
+      },
+      {
+        "block_num": 4,
+        "bbox": [
+          260,
+          345,
+          90,
+          26
+        ],
+        "text": "Items checked Comments"
+      },
+      {
+        "block_num": 6,
+        "bbox": [
+          178,
+          3279,
+          64,
+          22
+        ],
+        "text": "Case No: 2203EN5G0000002/1000 / Report reference: EN5G0/22/2065 Nature of the mission: Periodic general verification 45 Verification location: SAS VESTAS FRANCE"
+      }
+    ]
+  },
+  {
+    "page_number": 5,
+    "blocks": [
+      {
+        "block_num": 1,
+        "bbox": [
+          68,
+          33,
+          162,
+          33
+        ],
+        "text": "Machine Translated by Google"
+      },
+      {
+        "block_num": 3,
+        "bbox": [
+          2126,
+          275,
+          178,
+          27
+        ],
+        "text": "SOCOTEC"
+      },
+      {
+        "block_num": 4,
+        "bbox": [
+          187,
+          348,
+          204,
+          42
+        ],
+        "text": "ANNEX 1: List of work equipment verification points (EdT)"
+      },
+      {
+        "block_num": 5,
+        "bbox": [
+          191,
+          470,
+          42,
+          19
+        ],
+        "text": "The verifications carried out by SOCOTEC in its capacity as a third party organization make it possible to meet the regulatory requirements taken as reference and recalled for each piece of"
+      },
+      {
+        "block_num": 6,
+        "bbox": [
+          191,
+          520,
+          116,
+          23
+        ],
+        "text": "equipment in the chapter “Special verification conditions"
+      },
+      {
+        "block_num": 7,
+        "bbox": [
+          191,
+          620,
+          42,
+          19
+        ],
+        "text": "The verification focused on the state of conservation and operation of the following points (1), within the limits of the nature of the work equipment and the devices with which it is equipped during the verification."
+      },
+      {
+        "block_num": 8,
+        "bbox": [
+          192,
+          720,
+          36,
+          19
+        ],
+        "text": "For lifting devices, it includes load tests to the extent that the necessary conditions for carrying out these tests are met."
+      },
+      {
+        "block_num": 9,
+        "bbox": [
+          191,
+          820,
+          42,
+          19
+        ],
+        "text": "The verification did not cover the state of conformity of the work equipment."
+      },
+      {
+        "block_num": 10,
+        "bbox": [
+          1069,
+          907,
+          103,
+          39
+        ],
+        "text": "Lifting devices"
+      },
+      {
+        "block_num": 11,
+        "bbox": [
+          202,
+          1001,
+          148,
+          23
+        ],
+        "text": "Permanently installed access"
+      },
+      {
+        "block_num": 12,
+        "bbox": [
+          1284,
+          1008,
+          111,
+          23
+        ],
+        "text": "Hydraulic equipment to the driving position(s) * Access to the equipment « Links and connections * device support(s) + Other access for maintenance, Levels - Pressure « Filters verification + Runway, rails +"
+      },
+      {
+        "block_num": 16,
+        "bbox": [
+          202,
+          1216,
+          84,
+          24
+        ],
+        "text": "sealing, supports + Bumpers, Pneumatic equipment shock absorbers * Anchors, mooring, guying * Earthing of the equipment + Links and connections « track Pressure Filters - Exhausts + Assemblies,"
+      },
+      {
+        "block_num": 17,
+        "bbox": [
+          202,
+          1372,
+          139,
+          22
+        ],
+        "text": "connections, fixings * Chassis - Carrier - + Engine * Fuel tank"
+      },
+      {
+        "block_num": 18,
+        "bbox": [
+          203,
+          1403,
+          70,
+          19
+        ],
+        "text": "Frame — Structure — Posts/masts"
+      },
+      {
+        "block_num": 19,
+        "bbox": [
+          202,
+          1500,
+          72,
+          22
+        ],
+        "text": "tracks, rollers, etc.) * Catchers or equivalent elements + Protection against burns (exhaust, etc.)"
+      },
+      {
+        "block_num": 20,
+        "bbox": [
+          202,
+          1532,
+          71,
+          19
+        ],
+        "text": "device + Stabilizers and their holding devices » Ballast or counterweight"
+      },
+      {
+        "block_num": 22,
+        "bbox": [
+          360,
+          1583,
+          7,
+          7
+        ],
+        "text": "+ Geared motor groups |sWinch+ Screwnut SES) systems + Rack and pinion/crown/chain systems + Scissor system(s) + Other"
+      },
+      {
+        "block_num": 24,
+        "bbox": [
+          202,
+          1692,
+          139,
+          19
+        ],
+        "text": "transmission and coupling devices * Brakes for fixings, floor « Protection against falls from movements contributing to lifting + Brakes for horizontal height * Driver protection (head protector, roof, FOPS,"
+      },
+      {
+        "block_num": 26,
+        "bbox": [
+          203,
+          1768,
+          128,
+          19
+        ],
+        "text": "movements / translation /"
+      },
+      {
+        "block_num": 27,
+        "bbox": [
+          1283,
+          1781,
+          74,
+          22
+        ],
+        "text": "ROPS, etc.) » Protection against mechanical risks"
+      },
+      {
+        "block_num": 31,
+        "bbox": [
+          203,
+          1858,
+          73,
+          19
+        ],
+        "text": "brakes (2) « Mobile transmission + Folding platform » Visibility Parts (windows, windshield wipers, rear-view mirrors, mirror, etc.) + Fire and their protections + Level extinguisher in the cabin or on the device » Seat adjustment mechanism * Cables - and seat belt + Heating - Lighting +"
+      },
+      {
+        "block_num": 33,
+        "bbox": [
+          203,
+          2012,
+          76,
+          19
+        ],
+        "text": "Chains - Straps + Fasteners Access lock (key, code - Fixed points - Wedge box « Drums - Pulleys - Rollers"
+      },
+      {
+        "block_num": 34,
+        "bbox": [
+          512,
+          2094,
+          6,
+          7
+        ],
+        "text": "+ Block — Hook — Safety latch * Fork Operating devices — Bucket — Gripper — Spur — Stem — Grapple + Electromagnet, vacuum gripping"
+      },
+      {
+        "block_num": 37,
+        "bbox": [
+          1282,
+          2140,
+          71,
+          19
+        ],
+        "text": "device + General/workstation/"
+      },
+      {
+        "block_num": 39,
+        "bbox": [
+          182,
+          2160,
+          13,
+          50
+        ],
+        "text": "| (suction cups, ete)» emergency stopping device(s) * Maintained action control device » Device Device linked to energy failure » Support load +» Passenger compartment, limiting use to authorized persons « Troubleshooting or basket, nacelle « Other gripping devices rescue station + Remote controls + Other service devices (push buttons, Electrical equipment etc."
+      },
+      {
+        "block_num": 40,
+        "bbox": [
+          202,
+          2332,
+          98,
+          22
+        ],
+        "text": "cabinets, boxes, etc.) * Electrical equipment « Links and connections « Interconnection"
+      },
+      {
+        "block_num": 41,
+        "bbox": [
+          202,
+          2401,
+          22,
+          20
+        ],
+        "text": "of metal masses"
+      },
+      {
+        "block_num": 43,
+        "bbox": [
+          1282,
+          2418,
+          99,
+          23
+        ],
+        "text": "Warning and signaling devices"
+      },
+      {
+        "block_num": 44,
+        "bbox": [
+          1282,
+          2461,
+          95,
+          26
+        ],
+        "text": "displays, etc.) * Warning devices (visual, audible, etc.)"
+      },
+      {
+        "block_num": 47,
+        "bbox": [
+          1281,
+          2546,
+          87,
+          23
+        ],
+        "text": "Display and instructions"
+      },
+      {
+        "block_num": 49,
+        "bbox": [
+          1282,
+          2589,
+          21,
+          19
+        ],
+        "text": "of the maximum useful load (CMU) « Load table - Charts + Warnings - Instructions Refer to the devices listed for each"
+      },
+      {
+        "block_num": 51,
+        "bbox": [
+          1283,
+          2803,
+          151,
+          23
+        ],
+        "text": "Management of energy sources"
+      },
+      {
+        "block_num": 52,
+        "bbox": [
+          1282,
+          2846,
+          116,
+          23
+        ],
+        "text": "dissipation devices"
+      },
+      {
+        "block_num": 53,
+        "bbox": [
+          1283,
+          2894,
+          36,
+          18
+        ],
+        "text": "the device"
+      },
+      {
+        "block_num": 59,
+        "bbox": [
+          1281,
+          2937,
+          61,
+          19
+        ],
+        "text": "traffic"
+      },
+      {
+        "block_num": 61,
+        "bbox": [
+          192,
+          3022,
+          29,
+          25
+        ],
+        "text": "(1) The list is given for information only and cannot be considered as an exhaustive list of verification points. (2) The nature of these specific"
+      },
+      {
+        "block_num": 62,
+        "bbox": [
+          191,
+          3077,
+          78,
+          20
+        ],
+        "text": "organs and devices is indicated in the description of each work equipment checked."
+      },
+      {
+        "block_num": 63,
+        "bbox": [
+          178,
+          3279,
+          64,
+          22
+        ],
+        "text": "Case No: 2203EN5G0000002/1000 / Report reference: EN5G0/22/2065"
+      },
+      {
+        "block_num": 64,
+        "bbox": [
+          181,
+          3313,
+          83,
+          22
+        ],
+        "text": "Nature of the mission: Periodic general verification 5/5 Verification location: SAS VESTAS FRANCE"
+      }
+    ]
+  }
+]
