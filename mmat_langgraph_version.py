@@ -172,7 +172,7 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     # Exemple de fichier source
-    input_file = "Consigne_preetude_poleIA_1A.pdf"
+    input_file = "Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf"
     src_filepath = os.path.join(input_dir, input_file)
     file_root, file_ext = os.path.splitext(input_file)
     mt_filepath = os.path.join(output_dir, f"{file_root}_translated{file_ext}")

@@ -8,6 +8,7 @@ en se basant sur des triplets standardisés : texte original, texte traduit, et 
 from comet import download_model, load_from_checkpoint
 import pandas as pd
 import os
+# from PyDeepLX import PyDeepLX
 
 class EvaluatorAgent:
     """
@@ -57,3 +58,6 @@ class EvaluatorAgent:
         print(f"Évaluation terminée ! Résultats sauvegardés dans '{output_file}'")
         
         return results  # Retourne les résultats
+
+
+# print(PyDeepLX.translate('ceci est un test'))
