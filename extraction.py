@@ -1,102 +1,124 @@
 import fitz  # PyMuPDF
 import os
-from sentence_transformers import SentenceTransformer, util
-import re  # Importer le module pour les expressions régulières
+import re
 import pickle
+from tqdm import tqdm
+from sentence_transformers import SentenceTransformer
 
 # Chemin vers le fichier PDF
-pdf_path = "src_documents/dictgeniecivil.pdf"
+PDF_PATH = "glossary/dictgeniecivil.pdf"
 
-# Vérifier si le fichier existe
-if not os.path.exists(pdf_path):
-    raise FileNotFoundError(f"Le fichier PDF '{pdf_path}' est introuvable. Vérifiez le chemin.")
-
-# Charger le PDF
-doc = fitz.open(pdf_path)
-glossary = []
+# Chemins pour sauvegarder les glossaires
+GLOSSARY_ENGFR_PATH = "glossary/glossary_engfr_embeddings.pickle"
+GLOSSARY_FRENG_PATH = "glossary/glossary_freng_embeddings.pickle"
 
 # Liste des indications à supprimer
-glossary_indications = ["m", "m,", "f", "f,", "adj", "adj,", "vb", "vb,"]
+GLOSSARY_INDICATIONS = ["m", "m,", "f", "f,", "adj", "adj,", "vb", "vb,"]
 
-for page_num, page in enumerate(doc):
-    if not (258 <= page_num and page_num <= 444):
-        continue
-    # print("Page", page_num)
-    page_dict = page.get_text("dict")
-    for block in page_dict.get("blocks", []):
-        for line in block.get("lines", []):
-            spans = line.get("spans", [])
-            if not spans:
-                continue
+def extract_glossary(doc, start_page, end_page):
+    """
+    Extrait les termes du glossaire d'un PDF entre deux pages données.
 
-            # Initialiser les variables pour stocker les termes
-            term_original = ""
-            term_translated = ""
+    Args:
+        doc (fitz.Document): Document PDF chargé avec PyMuPDF.
+        start_page (int): Numéro de la première page à traiter.
+        end_page (int): Numéro de la dernière page à traiter.
 
-            for span in spans:
-                text = span["text"].strip()
-                if not text:
+    Returns:
+        list: Liste de tuples (terme_original, terme_traduit).
+    """
+    glossary = []
+
+    for page_num, page in enumerate(doc):
+        if not (start_page <= page_num <= end_page):
+            continue
+
+        page_dict = page.get_text("dict")
+        for block in page_dict.get("blocks", []):
+            for line in block.get("lines", []):
+                spans = line.get("spans", [])
+                if not spans:
                     continue
 
-                # Supprimer uniquement les indications listées, sans affecter le reste du texte
-                text = re.sub(rf'\b({"|".join(re.escape(ind) for ind in glossary_indications)})\b', '', text).strip()
-                if not text:  # Si le texte est vide après nettoyage, passer au suivant
-                    continue
+                # Initialiser les variables pour stocker les termes
+                term_original = ""
+                term_translated = ""
 
-                # Vérifier si le texte est en gras (bold)
-                if "bold" in span.get("font", "").lower():
-                    if term_translated:  # Si un terme traduit est déjà accumulé, ignorer
+                for span in spans:
+                    text = span["text"].strip()
+                    if not text:
                         continue
-                    term_original = f"{term_original} {text}".strip()  # Ajouter au terme original avec un espace
-                else:
-                    term_translated = f"{term_translated} {text}".strip()  # Ajouter au terme traduit avec un espace
 
-            # Réorganiser les termes originaux si une virgule est présente
-            if term_original and "," in term_original:
-                parts = [part.strip() for part in term_original.split(",")]
-                if len(parts) == 2:
-                    term_original = f"{parts[1]} {parts[0]}"
+                    # Supprimer uniquement les indications listées
+                    text = re.sub(rf'\b({"|".join(re.escape(ind) for ind in GLOSSARY_INDICATIONS)})\b', '', text).strip()
+                    if not text:
+                        continue
 
-            # Si les deux termes sont trouvés, les ajouter à la liste structurée
-            if term_original and term_translated:
-                glossary.append((term_original, term_translated))
-                # print(f"Original: {term_original} ; Translated: {term_translated}")
+                    # Vérifier si le texte est en gras (bold)
+                    if "bold" in span.get("font", "").lower():
+                        if term_translated:  # Si un terme traduit est déjà accumulé, ignorer
+                            continue
+                        term_original = f"{term_original} {text}".strip()
+                    else:
+                        term_translated = f"{term_translated} {text}".strip()
 
-# Afficher les données structurées
-# print("\nExtracted Terms:")
-# for original, translated in glossary:
-#         print(f"{original} -> {translated}")
+                # Réorganiser les termes originaux si une virgule est présente
+                if term_original and "," in term_original:
+                    parts = [part.strip() for part in term_original.split(",")]
+                    if len(parts) == 2:
+                        term_original = f"{parts[1]} {parts[0]}"
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+                # Ajouter les termes au glossaire
+                if term_original and term_translated:
+                    glossary.append((term_original, term_translated))
 
-# Générer les embeddings pour le glossaire
-glossary_embeddings = []
-length = len(glossary)
-i = 0
-for original, translated in glossary:
-    embedding = model.encode(original, convert_to_tensor=True)
-    glossary_embeddings.append((original, translated, embedding))
-    # print(f"Original: {original} ; Translated: {translated}")
-    i += 1
-    if i % 100 == 0:  # Afficher la progression tous les 100 termes
-        print(f"Progress: {i}/{length} ({(i/length)*100:.2f}%)")
+    return glossary
 
-with open("glossary_embeddings.pkl", "wb") as f:
-    pickle.dump(glossary_embeddings, f)
+def generate_embeddings(glossary, model, output_path):
+    """
+    Génère les embeddings pour un glossaire et les sauvegarde dans un fichier.
 
-print("Embeddings sauvegardés dans 'glossary_embeddings.pkl'.")
+    Args:
+        glossary (list): Liste de tuples (terme_original, terme_traduit).
+        model (SentenceTransformer): Modèle pour générer les embeddings.
+        output_path (str): Chemin pour sauvegarder les embeddings.
+    """
+    glossary_embeddings = []
 
-# # Texte source à traduire
-# source_text = "The dissolved acetylene is highly reactive."
-# source_embedding = model.encode(source_text, convert_to_tensor=True)
+    # Utiliser tqdm pour afficher la progression
+    with tqdm(total=len(glossary), desc="Génération des embeddings", unit="terme") as pbar:
+        for original, translated in glossary:
+            embedding = model.encode(original, convert_to_tensor=True)
+            glossary_embeddings.append((original, translated, embedding))
+            pbar.update(1)  # Mettre à jour la barre de progression
 
-# # Trouver les termes pertinents
-# relevant_terms = []
-# for original, translated, embedding in glossary_embeddings:
-#     similarity = util.cos_sim(source_embedding, embedding).item()
-#     if similarity > 0.5:  # Seuil de similarité (ajustez selon vos besoins)
-#         relevant_terms.append((original, translated, similarity))
+    # Sauvegarder les embeddings dans un fichier
+    with open(output_path, "wb") as f:
+        pickle.dump(glossary_embeddings, f)
+    print(f"Embeddings sauvegardés dans '{output_path}'.")
 
-# # Trier les termes par pertinence (similarité décroissante)
-# relevant_terms = sorted(relevant_terms, key=lambda x: x[2], reverse=True)
-# print(relevant_terms)
+def main():
+    # Vérifier si le fichier PDF existe
+    if not os.path.exists(PDF_PATH):
+        raise FileNotFoundError(f"Le fichier PDF '{PDF_PATH}' est introuvable. Vérifiez le chemin.")
+
+    # Charger le PDF
+    doc = fitz.open(PDF_PATH)
+
+    # Charger le modèle SentenceTransformer
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+
+    # Extraire et sauvegarder le glossaire anglais -> français
+    print("Extraction du glossaire anglais -> français...")
+    glossary_engfr = extract_glossary(doc, start_page=22, end_page=254)
+    print(f"Glossaire anglais -> français extrait : {len(glossary_engfr)} termes.")
+    generate_embeddings(glossary_engfr, model, GLOSSARY_ENGFR_PATH)
+
+    # Extraire et sauvegarder le glossaire français -> anglais
+    print("Extraction du glossaire français -> anglais...")
+    glossary_freng = extract_glossary(doc, start_page=258, end_page=444)
+    print(f"Glossaire français -> anglais extrait : {len(glossary_freng)} termes.")
+    generate_embeddings(glossary_freng, model, GLOSSARY_FRENG_PATH)
+
+if __name__ == "__main__":
+    main()

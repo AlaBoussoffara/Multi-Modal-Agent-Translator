@@ -8,6 +8,7 @@ en compte du contexte.
 """
 
 import pickle
+import time
 from sentence_transformers import util, SentenceTransformer
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -25,7 +26,7 @@ class TranslatorAgent:
         max_chunk_words (int) : Nombre maximum de mots autorisés par bloc de traduction.
         glossary_embeddings_path (str) : Chemin vers le fichier pickle contenant les embeddings du glossaire.
     """
-    def __init__(self, model, target_language='french', max_chunk_words=20, glossary_embeddings_path="glossary_embeddings.pkl"):
+    def __init__(self, model, target_language='french', max_chunk_words=20):
         """
         Initialise le TranslatorAgent avec le modèle de traduction, la langue cible et le nombre maximum
         de mots par bloc.
@@ -34,13 +35,20 @@ class TranslatorAgent:
             model: Le modèle de traduction ou None pour effectuer une traduction fictive.
             target_language (str, optionnel): Langue cible. Par défaut : 'french'.
             max_chunk_words (int, optionnel): Nombre maximum de mots par bloc. Par défaut : 20.
-            glossary_embeddings_path (str, optionnel): Chemin vers le fichier pickle contenant les embeddings du glossaire.
         """
         self.model = model
         self.target_language = target_language
         self.max_chunk_words = max_chunk_words
-        self.glossary_embeddings_path = glossary_embeddings_path
+        if target_language == "english":
+            self.glossary_embeddings_path = "glossary/glossary_freng_embeddings.pickle"
+        elif target_language == "french":
+            self.glossary_embeddings_path = "glossary/glossary_engfr_embeddings.pickle"
+        
         self.glossary_embeddings = self._load_glossary_embeddings()
+
+        # Charger le modèle SentenceTransformer une seule fois
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+
         self._terminal_pbar = None  # Barre de progression pour la sortie terminal
         self._pbar_initialized = False  # Indique si la barre de progression a été initialisée
 
@@ -75,8 +83,8 @@ class TranslatorAgent:
         if not self.glossary_embeddings:
             return []
 
-        model_embedding = SentenceTransformer('all-MiniLM-L6-v2')
-        source_embedding = model_embedding.encode(source_text, convert_to_tensor=True)
+        # Calculer l'embedding de la phrase source
+        source_embedding = self.embedding_model.encode(source_text, convert_to_tensor=True)
         relevant_terms = []
 
         for original, translated, embedding in self.glossary_embeddings:
@@ -88,7 +96,7 @@ class TranslatorAgent:
         relevant_terms = sorted(relevant_terms, key=lambda x: x[2], reverse=True)[:max_terms]
         return [(original, translated) for original, translated, _ in relevant_terms]
 
-    def translate(self, paragraphs, progress_callback=None, terminal_progress=True):
+    def translate(self, paragraphs, progress_callback=None, terminal_progress=True, use_glossary=True):
         """
         Traduit une liste de paragraphes standardisés.
 
@@ -99,6 +107,7 @@ class TranslatorAgent:
             paragraphs (list): Liste de paragraphes à traduire.
             progress_callback (callable, optionnel): Fonction de rappel pour mettre à jour la progression.
             terminal_progress (bool, optionnel): Affiche une barre de progression dans le terminal. Par défaut : True.
+            use_glossary (bool, optionnel): Indique si les termes pertinents du glossaire doivent être ajoutés au prompt. Par défaut : True.
 
         Returns:
             list: Liste de paragraphes traduits avec leurs métadonnées préservées.
@@ -181,13 +190,17 @@ class TranslatorAgent:
                 current_chunk = escape_curly_braces(chunk)
                 prev_translated_escaped = escape_curly_braces(previous_translated_chunk)
 
-                # Récupérer les termes pertinents du glossaire
-                relevant_glossary_terms = self._get_relevant_glossary_terms(chunk)
-                glossary_prompt = "\n".join([f"{original} -> {translated}" for original, translated in relevant_glossary_terms])
+                # Récupérer les termes pertinents du glossaire si l'option est activée
+                glossary_prompt = ""
+                if use_glossary:
+                    # start = time.time()
+                    relevant_glossary_terms = self._get_relevant_glossary_terms(chunk)
+                    # print(f"Temps de récupération des termes pertinents : {time.time() - start:.2f} secondes")
+                    glossary_prompt = "\n".join([f"{original} -> {translated}" for original, translated in relevant_glossary_terms])
 
-                # Afficher les termes pertinents pour debug
-                print(f"Phrase à traduire : {chunk}")
-                print(f"Termes pertinents ajoutés au prompt : {glossary_prompt}")
+                    # Afficher les termes pertinents pour debug
+                    # print(f"Phrase à traduire : {chunk}")
+                    # print(f"Termes pertinents ajoutés au prompt : {glossary_prompt}")
 
                 # Prépare le prompt pour le modèle LLM
                 prompt_template = ChatPromptTemplate([
@@ -246,12 +259,14 @@ OUTPUT ONLY the translated version of the current chunk.
 
 if __name__ == "__main__":
     llm = ChatBedrock(
-    client=None,
-    model_id="us.meta.llama3-3-70b-instruct-v1:0",
-    region_name="us-west-2",
-    model_kwargs={"temperature": 0}
+        client=None,
+        model_id="us.meta.llama3-3-70b-instruct-v1:0",
+        region_name="us-west-2",
+        model_kwargs={"temperature": 0}
     )
     
     translator = TranslatorAgent(llm, "english")
-    translated_paragraphs = translator.translate([{"text": "Reniflard / filtre"}])
+    translated_paragraphs = translator.translate([{"text": "Reniflard / filtre"}], use_glossary=True)
     print(translated_paragraphs)
+    # translated_paragraphs = translator.translate([{"text": "Reniflard / filtre"}], use_glossary=False)
+    # print(translated_paragraphs)
