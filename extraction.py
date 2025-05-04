@@ -2,15 +2,17 @@ import fitz  # PyMuPDF
 import os
 import re
 import pickle
+import faiss  # Importer FAISS pour la recherche rapide
+import numpy as np
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer
 
 # Chemin vers le fichier PDF
 PDF_PATH = "glossary/dictgeniecivil.pdf"
 
-# Chemins pour sauvegarder les glossaires
-GLOSSARY_ENGFR_PATH = "glossary/glossary_engfr_embeddings.pickle"
-GLOSSARY_FRENG_PATH = "glossary/glossary_freng_embeddings.pickle"
+# Chemins pour sauvegarder les bases de données FAISS
+FAISS_ENGFR_PATH = "glossary/glossary_engfr.faiss"
+FAISS_FRENG_PATH = "glossary/glossary_freng.faiss"
 
 # Liste des indications à supprimer
 GLOSSARY_INDICATIONS = ["m", "m,", "f", "f,", "adj", "adj,", "vb", "vb,"]
@@ -74,28 +76,48 @@ def extract_glossary(doc, start_page, end_page):
 
     return glossary
 
-def generate_embeddings(glossary, model, output_path):
+def create_faiss_index(glossary, model, output_path):
     """
-    Génère les embeddings pour un glossaire et les sauvegarde dans un fichier.
+    Crée et sauvegarde une base de données FAISS pour un glossaire en utilisant une méthode exacte.
 
     Args:
         glossary (list): Liste de tuples (terme_original, terme_traduit).
         model (SentenceTransformer): Modèle pour générer les embeddings.
-        output_path (str): Chemin pour sauvegarder les embeddings.
+        output_path (str): Chemin pour sauvegarder la base de données FAISS.
     """
-    glossary_embeddings = []
-
-    # Utiliser tqdm pour afficher la progression
+    # Générer les embeddings pour tous les termes originaux
+    print("Génération des embeddings pour FAISS...")
+    embeddings = []
     with tqdm(total=len(glossary), desc="Génération des embeddings", unit="terme") as pbar:
-        for original, translated in glossary:
-            embedding = model.encode(original, convert_to_tensor=True)
-            glossary_embeddings.append((original, translated, embedding))
+        for original, _ in glossary:
+            embedding = model.encode(original, convert_to_tensor=False)
+            embeddings.append(embedding)
             pbar.update(1)  # Mettre à jour la barre de progression
+    embeddings = np.array(embeddings, dtype="float32")  # FAISS nécessite des float32
 
-    # Sauvegarder les embeddings dans un fichier
-    with open(output_path, "wb") as f:
-        pickle.dump(glossary_embeddings, f)
-    print(f"Embeddings sauvegardés dans '{output_path}'.")
+    # Créer un index FAISS exact (IndexFlatL2 pour la recherche exacte)
+    print("Création de l'index FAISS exact...")
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+
+    # Ajouter les embeddings à l'index avec une barre de progression
+    print("Ajout des embeddings à l'index FAISS...")
+    with tqdm(total=len(embeddings), desc="Ajout des embeddings", unit="terme") as pbar:
+        for i in range(0, len(embeddings), 1000):  # Ajouter par lots pour éviter les ralentissements
+            batch = embeddings[i:i + 1000]
+            index.add(batch)
+            pbar.update(len(batch))
+
+    print(f"Index FAISS exact créé avec {index.ntotal} vecteurs.")
+
+    # Sauvegarder l'index FAISS
+    faiss.write_index(index, output_path)
+    print(f"Index FAISS sauvegardé dans '{output_path}'.")
+
+    # Sauvegarder les métadonnées (termes originaux et traduits)
+    metadata_path = output_path.replace(".faiss", "_metadata.pickle")
+    with open(metadata_path, "wb") as f:
+        pickle.dump(glossary, f)
+    print(f"Métadonnées sauvegardées dans '{metadata_path}'.")
 
 def main():
     # Vérifier si le fichier PDF existe
@@ -112,13 +134,13 @@ def main():
     print("Extraction du glossaire anglais -> français...")
     glossary_engfr = extract_glossary(doc, start_page=22, end_page=254)
     print(f"Glossaire anglais -> français extrait : {len(glossary_engfr)} termes.")
-    generate_embeddings(glossary_engfr, model, GLOSSARY_ENGFR_PATH)
+    create_faiss_index(glossary_engfr, model, FAISS_ENGFR_PATH)
 
     # Extraire et sauvegarder le glossaire français -> anglais
     print("Extraction du glossaire français -> anglais...")
     glossary_freng = extract_glossary(doc, start_page=258, end_page=444)
     print(f"Glossaire français -> anglais extrait : {len(glossary_freng)} termes.")
-    generate_embeddings(glossary_freng, model, GLOSSARY_FRENG_PATH)
+    create_faiss_index(glossary_freng, model, FAISS_FRENG_PATH)
 
 if __name__ == "__main__":
     main()

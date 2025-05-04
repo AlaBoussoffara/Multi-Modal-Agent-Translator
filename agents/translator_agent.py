@@ -14,6 +14,8 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from tqdm import tqdm
 from langchain_aws import ChatBedrock
+import faiss  # Importer FAISS pour la recherche rapide
+import numpy as np  # Pour manipuler les vecteurs
 
 class TranslatorAgent:
     """
@@ -40,11 +42,14 @@ class TranslatorAgent:
         self.target_language = target_language
         self.max_chunk_words = max_chunk_words
         if target_language == "english":
-            self.glossary_embeddings_path = "glossary/glossary_freng_embeddings.pickle"
+            self.faiss_index_path = "glossary/glossary_freng.faiss"
+            self.metadata_path = "glossary/glossary_freng_metadata.pickle"
         elif target_language == "french":
-            self.glossary_embeddings_path = "glossary/glossary_engfr_embeddings.pickle"
+            self.faiss_index_path = "glossary/glossary_engfr.faiss"
+            self.metadata_path = "glossary/glossary_engfr_metadata.pickle"
         
-        self.glossary_embeddings = self._load_glossary_embeddings()
+        self.faiss_index = self._load_faiss_index()
+        self.glossary_metadata = self._load_glossary_metadata()
 
         # Charger le modèle SentenceTransformer une seule fois
         self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -52,48 +57,70 @@ class TranslatorAgent:
         self._terminal_pbar = None  # Barre de progression pour la sortie terminal
         self._pbar_initialized = False  # Indique si la barre de progression a été initialisée
 
-    def _load_glossary_embeddings(self):
+    def _load_faiss_index(self):
         """
-        Charge les embeddings du glossaire depuis un fichier pickle.
+        Charge l'index FAISS depuis un fichier.
 
         Returns:
-            list: Liste des tuples (original, translated, embedding).
+            faiss.Index: L'index FAISS chargé.
         """
         try:
-            with open(self.glossary_embeddings_path, "rb") as f:
-                glossary_embeddings = pickle.load(f)
-            print(f"Glossary embeddings chargés depuis '{self.glossary_embeddings_path}'.")
-            return glossary_embeddings
+            index = faiss.read_index(self.faiss_index_path)
+            print(f"Index FAISS chargé depuis '{self.faiss_index_path}'.")
+            return index
         except FileNotFoundError:
-            print(f"Erreur : Le fichier '{self.glossary_embeddings_path}' est introuvable.")
+            print(f"Erreur : L'index FAISS '{self.faiss_index_path}' est introuvable.")
+            return None
+
+    def _load_glossary_metadata(self):
+        """
+        Charge les métadonnées associées à l'index FAISS.
+
+        Returns:
+            list: Liste des tuples (original, translated).
+        """
+        try:
+            with open(self.metadata_path, "rb") as f:
+                metadata = pickle.load(f)
+            print(f"Métadonnées chargées depuis '{self.metadata_path}'.")
+            return metadata
+        except FileNotFoundError:
+            print(f"Erreur : Les métadonnées '{self.metadata_path}' sont introuvables.")
             return []
 
-    def _get_relevant_glossary_terms(self, source_text, max_terms=10, similarity_threshold=0.5):
+    def _get_relevant_glossary_terms(self, source_text, max_terms=10):
         """
-        Récupère les termes pertinents du glossaire pour une phrase donnée.
+        Récupère les termes pertinents du glossaire pour une phrase donnée en utilisant FAISS.
 
         Args:
             source_text (str): La phrase source à traduire.
             max_terms (int, optionnel): Nombre maximum de termes pertinents à inclure. Par défaut : 10.
-            similarity_threshold (float, optionnel): Seuil de similarité pour inclure un terme. Par défaut : 0.5.
 
         Returns:
-            list: Liste des tuples (original, translated) des termes pertinents.
+            list: Liste des tuples (original, translated) des termes pertinents, triés par pertinence.
         """
-        if not self.glossary_embeddings:
+        if not self.faiss_index or not self.glossary_metadata:
             return []
 
         # Calculer l'embedding de la phrase source
-        source_embedding = self.embedding_model.encode(source_text, convert_to_tensor=True)
+        source_embedding = self.embedding_model.encode(source_text, convert_to_tensor=False)
+        source_embedding = np.array([source_embedding], dtype="float32")
+
+        # Effectuer une recherche k-NN dans l'index FAISS
+        distances, indices = self.faiss_index.search(source_embedding, max_terms)
+
+        # Récupérer les termes pertinents à partir des indices et trier par distance (pertinence)
         relevant_terms = []
+        for idx, dist in zip(indices[0], distances[0]):
+            if idx == -1:  # Si aucun terme pertinent n'est trouvé
+                continue
+            original, translated = self.glossary_metadata[idx]
+            relevant_terms.append((original, translated, dist))
 
-        for original, translated, embedding in self.glossary_embeddings:
-            similarity = util.cos_sim(source_embedding, embedding).item()
-            if similarity > similarity_threshold:
-                relevant_terms.append((original, translated, similarity))
+        # Trier les termes par pertinence (distance croissante)
+        relevant_terms.sort(key=lambda x: x[2])
 
-        # Trier les termes par pertinence (similarité décroissante) et limiter à max_terms
-        relevant_terms = sorted(relevant_terms, key=lambda x: x[2], reverse=True)[:max_terms]
+        # Retourner uniquement les termes (original, translated)
         return [(original, translated) for original, translated, _ in relevant_terms]
 
     def translate(self, paragraphs, progress_callback=None, terminal_progress=True, use_glossary=True):
