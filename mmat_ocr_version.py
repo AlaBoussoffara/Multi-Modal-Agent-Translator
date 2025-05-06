@@ -44,7 +44,7 @@ def langgraph_ocr_pipeline(input_filepath: str, output_filepath: str, target_lan
 
     # Nœud d'extraction OCR
     def extract_node(state: OverallState) -> OverallState:
-        ocr_agent = OCR_Agent()
+        ocr_agent = OCR_Agent("Multi-Modal-Agent-Translator/documents_a_traduire/SQ_15830852.PDF")
         extracted_content = ocr_agent.extract_blocks(state["input_filepath"])
         
         # Extraction des textes simples pour la traduction
