@@ -226,8 +226,8 @@ class TranslatorAgent:
                     glossary_prompt = "\n".join([f"{original} -> {translated}" for original, translated in relevant_glossary_terms])
 
                     # Afficher les termes pertinents pour debug
-                    # print(f"Phrase à traduire : {chunk}")
-                    # print(f"Termes pertinents ajoutés au prompt : {glossary_prompt}")
+                    print(f"Phrase à traduire : {chunk}")
+                    print(f"Termes pertinents ajoutés au prompt : {glossary_prompt}")
 
                 # Prépare le prompt pour le modèle LLM
                 prompt_template = ChatPromptTemplate([
