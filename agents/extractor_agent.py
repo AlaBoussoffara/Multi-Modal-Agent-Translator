@@ -223,7 +223,6 @@ class DOCXExtractor(BaseExtractor):
         document = Document(filepath)
         paragraphs = []
         images = []
-        image_counter = 0
 
         for para in document.paragraphs:
             if not para.runs:
@@ -267,12 +266,8 @@ class DOCXExtractor(BaseExtractor):
 
         for rel in document.part.rels.values():
             if "image" in rel.target_ref:
-                image_counter += 1
                 image_data = rel.target_part.blob
-                image_name = f"image_{image_counter}.png"
-                with open(image_name, "wb") as img_file:
-                    img_file.write(image_data)
-                images.append({"name": image_name, "position": len(paragraphs)})
+                images.append({"data": image_data, "position": len(paragraphs)})
 
         return {"paragraphs": [standardize_paragraph(p) for p in paragraphs], "images": images}
 
