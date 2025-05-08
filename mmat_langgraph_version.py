@@ -83,11 +83,17 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
     def extract_node(state: OverallState) -> OverallState:
         extractor = ExtractorAgent(state["file_type"])
         original_content = extractor.extract(state["src_filepath"])
+
+        if not original_content:
+            raise ValueError(f"Extraction failed for file: {state['src_filepath']}. Please check the file format or content.")
+
         state["extracted_content"] = original_content
 
         # Lire le fichier de référence uniquement si l'évaluation est activée
         if evaluate:
             ref_content = extractor.extract(state["ref_filepath"])
+            if not ref_content:
+                raise ValueError(f"Extraction failed for reference file: {state['ref_filepath']}. Please check the file format or content.")
             state["ref_content"] = ref_content
         else:
             state["ref_content"] = None  # Pas de contenu de référence si l'évaluation est désactivée
@@ -172,7 +178,7 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
 
     # Exemple de fichier source
-    input_file = "Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf"
+    input_file = "medical_report_April2nd.docx"
     src_filepath = os.path.join(input_dir, input_file)
     file_root, file_ext = os.path.splitext(input_file)
     mt_filepath = os.path.join(output_dir, f"{file_root}_translated{file_ext}")

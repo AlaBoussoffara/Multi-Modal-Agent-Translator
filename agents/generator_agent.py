@@ -177,11 +177,11 @@ class PDFGenerator(BaseOutputGenerator):
 
 class DOCXGenerator(BaseOutputGenerator):
     """
-    Generates a DOCX file with translated content.
+    Generates a DOCX file with translated content and reinserts images.
     """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Generate a DOCX document from the translated paragraphs.
+        Generate a DOCX document from the translated paragraphs and images.
 
         Args:
             structured_data (dict): Translated content.
@@ -189,8 +189,19 @@ class DOCXGenerator(BaseOutputGenerator):
             output_filepath (str): Path to save the DOCX file.
         """
         doc = Document()
-        for para in structured_data.get("paragraphs", []):
+        paragraphs = structured_data.get("paragraphs", [])
+        images = structured_data.get("images", [])
+
+        image_index = 0
+        for i, para in enumerate(paragraphs):
             doc.add_paragraph(para["text"])
+
+            # Check if an image needs to be inserted at this position
+            while image_index < len(images) and images[image_index]["position"] == i:
+                image_path = images[image_index]["name"]
+                doc.add_picture(image_path)
+                image_index += 1
+
         doc.save(output_filepath)
         print(f"✅ New DOCX created from '{original_filepath}' => '{output_filepath}'")
 

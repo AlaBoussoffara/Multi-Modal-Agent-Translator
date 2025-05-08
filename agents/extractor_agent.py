@@ -211,16 +211,20 @@ class DOCXExtractor(BaseExtractor):
     """
     def extract_content(self, filepath: str) -> dict:
         """
-        Extrait le contenu structuré d'un fichier DOCX.
+        Extrait le contenu structuré d'un fichier DOCX, y compris les images.
 
         Args:
             filepath (str): Chemin vers le fichier DOCX.
 
         Returns:
-            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs'.
+            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs' et des images sous la clé 'images'.
         """
+        print(f"[DOCXExtractor] Extraction du contenu de {filepath}...")
         document = Document(filepath)
         paragraphs = []
+        images = []
+        image_counter = 0
+
         for para in document.paragraphs:
             if not para.runs:
                 continue
@@ -260,7 +264,17 @@ class DOCXExtractor(BaseExtractor):
                 "bold": para.runs[0].bold if para.runs else False,
                 "italic": para.runs[0].italic if para.runs else False,
             })
-        return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
+
+        for rel in document.part.rels.values():
+            if "image" in rel.target_ref:
+                image_counter += 1
+                image_data = rel.target_part.blob
+                image_name = f"image_{image_counter}.png"
+                with open(image_name, "wb") as img_file:
+                    img_file.write(image_data)
+                images.append({"name": image_name, "position": len(paragraphs)})
+
+        return {"paragraphs": [standardize_paragraph(p) for p in paragraphs], "images": images}
 
 
 class HTMLExtractor(BaseExtractor):
@@ -356,6 +370,7 @@ class ExtractorAgent:
             return extractor.extract_content(filepath)
         elif self.file_type == "docx":
             extractor = DOCXExtractor()
+            return extractor.extract_content(filepath)
         elif self.file_type == "html":
             extractor = HTMLExtractor()
         elif self.file_type == "txt":
