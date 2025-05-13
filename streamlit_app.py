@@ -54,11 +54,15 @@ def start_translation_callback():
     st.session_state.translation_in_progress = True
 
 # --- Sélection de la langue ---
-target_language = st.selectbox(
+pass_french_english = {
+    "Anglais": "english",
+    "Français": "french"
+}
+target_language = pass_french_english[st.selectbox(
     "Sélectionnez une langue pour la traduction :",
     ["Anglais", "Français"],
     index=0
-)
+)]
 
 # --- Téléchargement de fichiers ---
 uploaded_files = st.file_uploader("📤 Téléchargez vos documents", type=["pdf", "docx"], accept_multiple_files=True)
