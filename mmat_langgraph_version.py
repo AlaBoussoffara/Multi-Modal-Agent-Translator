@@ -25,7 +25,7 @@ llm = ChatBedrock(
 )
 logging.getLogger("langchain_aws").setLevel(logging.ERROR)
 
-def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, target_language="french", progress_callback=None, evaluate=True):
+def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, target_language="french", progress_callback=None, use_glossary=True, evaluate=True):
     """
     Exécute le pipeline de traduction en utilisant LangGraph.
 
@@ -100,7 +100,8 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         translated_paragraphs = translator.translate(
             state["extracted_content"]["paragraphs"],
             progress_callback=progress_callback,
-            terminal_progress=True
+            terminal_progress=True,
+            use_glossary=use_glossary
         )
         state["translated_paragraphs"] = translated_paragraphs
         return state
@@ -171,12 +172,14 @@ if __name__ == "__main__":
     ref_dir = "ref_translations"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Exemple de fichier source
-    input_file = "Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf"
-    src_filepath = os.path.join(input_dir, input_file)
-    file_root, file_ext = os.path.splitext(input_file)
-    mt_filepath = os.path.join(output_dir, f"{file_root}_translated{file_ext}")
-    ref_filepath = os.path.join(ref_dir, input_file)
+    for input_file in ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]:
+        src_filepath = os.path.join(input_dir, input_file)
+        file_root, file_ext = os.path.splitext(input_file)
+        ref_filepath = os.path.join(ref_dir, input_file)
 
-    # Exemple : Exécuter le pipeline sans évaluation
-    print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", evaluate=False))
+        # évaluation sans RAG
+        mt_filepath = os.path.join(output_dir, f"{file_root}_translated_noRAG{file_ext}")
+        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True))
+        # évaluation avec RAG
+        mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
+        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
