@@ -109,7 +109,9 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
     # Nœud pour générer le fichier de sortie
     def generate_node(state: OverallState) -> OverallState:
         generator = GeneratorAgent(state["file_type"])
-        structured_data = {"paragraphs": state["translated_paragraphs"]}
+        structured_data = {
+            "paragraphs": state["translated_paragraphs"],
+        }
         generator.generate(structured_data, state["src_filepath"], state["mt_filepath"])
         return state
 

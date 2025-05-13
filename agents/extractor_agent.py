@@ -9,6 +9,10 @@ import fitz  # PyMuPDF
 import numpy as np
 from docx import Document
 from bs4 import BeautifulSoup
+import os
+
+# Convert DOCX to PDF using docx2pdf
+from docx2pdf import convert
 
 
 def standardize_paragraph(p: dict) -> dict:
@@ -207,60 +211,31 @@ class PDFExtractor(BaseExtractor):
 
 class DOCXExtractor(BaseExtractor):
     """
-    Extrait le contenu des fichiers DOCX en utilisant python-docx.
+    Extracts content from DOCX files by converting them to PDF and using PDFExtractor.
     """
     def extract_content(self, filepath: str) -> dict:
         """
-        Extrait le contenu structuré d'un fichier DOCX.
+        Extracts structured content from a DOCX file by converting it to PDF.
 
         Args:
-            filepath (str): Chemin vers le fichier DOCX.
+            filepath (str): Path to the DOCX file.
 
         Returns:
-            dict: Dictionnaire contenant des paragraphes structurés sous la clé 'paragraphs'.
+            dict: Dictionary containing paragraphs structured under the key 'paragraphs'.
         """
-        document = Document(filepath)
-        paragraphs = []
-        for para in document.paragraphs:
-            if not para.runs:
-                continue
-            merged_text = ""
-            current_text = ""
-            current_style = (
-                para.runs[0].bold,
-                para.runs[0].italic,
-                para.runs[0].underline,
-                para.runs[0].font.name,
-                para.runs[0].font.size,
-                para.runs[0].font.color.rgb
-            )
-            for run in para.runs:
-                style = (
-                    run.bold,
-                    run.italic,
-                    run.underline,
-                    run.font.name,
-                    run.font.size,
-                    run.font.color.rgb
-                )
-                if style == current_style:
-                    current_text += run.text
-                else:
-                    merged_text += current_text
-                    current_text = run.text
-                    current_style = style
-            merged_text += current_text
-            paragraphs.append({
-                "text": merged_text,
-                "bbox": (0, 0, 100, 20),
-                "page": 0,
-                "font": "Times-Roman",
-                "size": 12,
-                "color": 0x000000,
-                "bold": para.runs[0].bold if para.runs else False,
-                "italic": para.runs[0].italic if para.runs else False,
-            })
-        return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
+        
+        temp_pdf_path = filepath.replace(".docx", "_temp.pdf")
+        try:
+            convert(filepath, temp_pdf_path)
+        except Exception as e:
+            raise ValueError(f"Failed to convert DOCX to PDF: {filepath}. Error: {e}")
+
+        
+        # Use PDFExtractor to extract content
+        pdf_extractor = PDFExtractor()
+        extracted_content = pdf_extractor.extract_content(temp_pdf_path)
+
+        return extracted_content
 
 
 class HTMLExtractor(BaseExtractor):
@@ -356,6 +331,7 @@ class ExtractorAgent:
             return extractor.extract_content(filepath)
         elif self.file_type == "docx":
             extractor = DOCXExtractor()
+            return extractor.extract_content(filepath)
         elif self.file_type == "html":
             extractor = HTMLExtractor()
         elif self.file_type == "txt":
