@@ -185,3 +185,4 @@ if __name__ == "__main__":
         # évaluation avec RAG
         mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
         print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
+        
