@@ -10,6 +10,9 @@ import numpy as np
 from docx import Document
 from bs4 import BeautifulSoup
 import os
+import subprocess
+from pdf2image import convert_from_path
+import pytesseract
 
 # Convert DOCX to PDF using docx2pdf
 from docx2pdf import convert
@@ -38,6 +41,34 @@ def standardize_paragraph(p: dict) -> dict:
     keys = {"text", "bbox", "page", "font", "size", "color", "bold", "italic", "spacing"}
     standardized["raw_metadata"] = {k: v for k, v in p.items() if k not in keys}
     return standardized
+
+
+def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
+    """
+    Prend un chemin vers un PDF, convertit chaque page en image, applique l'OCR, puis reconstitue un PDF OCRisé.
+    Le PDF OCRisé est enregistré avec le suffixe _ocr.pdf dans le même dossier.
+
+    Args:
+        input_pdf_path (str): Chemin vers le PDF d'entrée.
+        lang (str): Langues à utiliser pour l'OCR (par défaut: 'fra+eng').
+
+    Returns:
+        str: Chemin vers le PDF OCRisé généré.
+    """
+    import os
+    from pdf2image import convert_from_path
+    import pytesseract
+
+    if not os.path.exists(input_pdf_path):
+        raise FileNotFoundError(f"Fichier PDF introuvable : {input_pdf_path}")
+
+    ocr_pdf_path = input_pdf_path.replace(".pdf", "_ocr.pdf")
+    images = convert_from_path(input_pdf_path, dpi=400)
+    with open(ocr_pdf_path, "wb") as f:
+        for img in images:
+            pdf_bytes = pytesseract.image_to_pdf_or_hocr(img, extension='pdf', lang=lang)
+            f.write(pdf_bytes)
+    return ocr_pdf_path
 
 
 class BaseExtractor(ABC):
