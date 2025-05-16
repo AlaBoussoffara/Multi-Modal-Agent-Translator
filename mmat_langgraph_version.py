@@ -6,7 +6,7 @@ Ce pipeline utilise LangChain et StateGraph et ajoute un nœud d'évaluation à 
 import os
 import logging
 from typing import TypedDict
-from comet import download_model
+from comet.models import download_model
 from langchain_aws import ChatBedrock
 from langgraph.graph import StateGraph, START, END
 
@@ -167,6 +167,26 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         return final_state["evaluation_results"]
     return None
 
+# if __name__ == "__main__":
+#     # Définition des répertoires d'entrée et de sortie
+#     input_dir = "src_documents"
+#     output_dir = "mt_outputs"
+#     ref_dir = "ref_translations"
+#     os.makedirs(output_dir, exist_ok=True)
+
+#     for input_file in ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]:
+#         src_filepath = os.path.join(input_dir, input_file)
+#         file_root, file_ext = os.path.splitext(input_file)
+#         ref_filepath = os.path.join(ref_dir, input_file)
+
+#         # évaluation sans RAG
+#         mt_filepath = os.path.join(output_dir, f"{file_root}_translated_noRAG{file_ext}")
+#         print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True))
+#         # évaluation avec RAG
+#         mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
+#         print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
+
+
 if __name__ == "__main__":
     # Définition des répertoires d'entrée et de sortie
     input_dir = "src_documents"
@@ -174,15 +194,42 @@ if __name__ == "__main__":
     ref_dir = "ref_translations"
     os.makedirs(output_dir, exist_ok=True)
 
-    for input_file in ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]:
+    # Liste des fichiers à traiter
+    test_files = ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]
+
+    # Liste pour stocker les résultats
+    results = []
+
+    for input_file in test_files:
         src_filepath = os.path.join(input_dir, input_file)
         file_root, file_ext = os.path.splitext(input_file)
         ref_filepath = os.path.join(ref_dir, input_file)
 
         # évaluation sans RAG
         mt_filepath = os.path.join(output_dir, f"{file_root}_translated_noRAG{file_ext}")
-        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True))
+        eval_no_rag = langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True)
+        comet_score_no_rag = eval_no_rag[0]["COMET Score"] if eval_no_rag else None
+
         # évaluation avec RAG
         mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
-        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
-        
+        eval_rag = langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True)
+        comet_score_rag = eval_rag[0]["COMET Score"] if eval_rag else None
+
+        # Ajoute les résultats à la liste
+        results.append({
+            "filename": input_file,
+            "comet_score_no_rag": comet_score_no_rag,
+            "comet_score_rag": comet_score_rag
+        })
+
+    # Écriture des résultats dans un fichier CSV
+    csv_filepath = os.path.join(output_dir, "evaluation_results.csv")
+    with open(csv_filepath, mode="w", newline="", encoding="utf-8") as csvfile:
+        fieldnames = ["filename", "comet_score_no_rag", "comet_score_rag"]
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in results:
+            writer.writerow(row)
+
+    print(f"Résultats enregistrés dans {csv_filepath}")
+# ...existing code...ù
