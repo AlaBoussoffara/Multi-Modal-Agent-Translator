@@ -109,7 +109,7 @@ if st.session_state.translation_in_progress and not st.session_state.translation
         status_text.text(f"Traduction de {uploaded_file.name} en cours...")
         
         try:
-            evaluation_results = langgraph_pipeline(temp_input_path, temp_output_path, ref_file_path, target_language, progress_callback, False)
+            evaluation_results = langgraph_pipeline(temp_input_path, temp_output_path, ref_file_path, target_language, progress_callback, True, False)
             update_log(f"Traduction terminée pour {uploaded_file.name}.")
             # update_log(f"Résultats de l'évaluation : {evaluation_results[0]['COMET Score']}")
             st.session_state.translated_files.append({
