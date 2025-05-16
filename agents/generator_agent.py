@@ -108,10 +108,10 @@ class PDFGenerator(BaseOutputGenerator):
         for para in structured_data.get("paragraphs", []):
             page_num = para["page"]
             bbox = para["bbox"]
-            if (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
-                bbox = (bbox[0] + 2, bbox[1] + 2, bbox[2] - 2, bbox[3] - 2)
             page = doc[page_num]
             redaction_rect = fitz.Rect(bbox)
+            if (bbox[2] - bbox[0] > 4) and (bbox[3] - bbox[1] > 4):
+                bbox = (bbox[0] + 2, bbox[1] + 2, bbox[2] - 2, bbox[3] - 2)
             color_int = para["color"]
             r = (color_int >> 16) & 0xFF
             g = (color_int >> 8) & 0xFF
