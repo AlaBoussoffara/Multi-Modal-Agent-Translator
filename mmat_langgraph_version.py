@@ -16,6 +16,8 @@ from agents.translator_agent import TranslatorAgent
 from agents.generator_agent import GeneratorAgent
 from agents.evaluation_agent import EvaluatorAgent
 
+import csv
+
 # Initialisation du modèle LLM pour la traduction
 llm = ChatBedrock(
     client=None,
