@@ -223,7 +223,7 @@ if __name__ == "__main__":
         })
 
     # Écriture des résultats dans un fichier CSV
-    csv_filepath = os.path.join(output_dir, "evaluation_results.csv")
+    csv_filepath = os.path.join('comet_scores', "evaluation_results.csv")
     with open(csv_filepath, mode="w", newline="", encoding="utf-8") as csvfile:
         fieldnames = ["filename", "comet_score_no_rag", "comet_score_rag"]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
