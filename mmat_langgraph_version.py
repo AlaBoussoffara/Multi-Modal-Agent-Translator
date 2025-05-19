@@ -2,7 +2,7 @@
 Module démontrant un pipeline de traduction basé sur LangGraph avec évaluation.
 Ce pipeline utilise LangChain et StateGraph et ajoute un nœud d'évaluation à la fin.
 """
-
+import cvs 
 import os
 import logging
 from typing import TypedDict
@@ -232,4 +232,3 @@ if __name__ == "__main__":
             writer.writerow(row)
 
     print(f"Résultats enregistrés dans {csv_filepath}")
-# ...existing code...ù
