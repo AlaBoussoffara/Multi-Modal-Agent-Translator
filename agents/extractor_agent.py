@@ -3,20 +3,17 @@ Ce module fournit des classes et des fonctions pour extraire du contenu structur
 à partir de différents types de fichiers tels que PDF, DOCX, HTML et TXT.
 """
 
+import os
 from abc import ABC, abstractmethod
 from collections import Counter
-import fitz  # PyMuPDF
+
 import numpy as np
-from docx import Document
+import fitz  # PyMuPDF
 from bs4 import BeautifulSoup
-import os
-import subprocess
-from pdf2image import convert_from_path
+
 import pytesseract
-
-# Convert DOCX to PDF using docx2pdf
+from pdf2image import convert_from_path
 from docx2pdf import convert
-
 
 def standardize_paragraph(p: dict) -> dict:
     """
@@ -54,9 +51,6 @@ def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
     Returns:
         str: Chemin vers le PDF OCRisé généré.
     """
-    import os
-    from pdf2image import convert_from_path
-    import pytesseract
 
     if not os.path.exists(input_pdf_path):
         raise FileNotFoundError(f"Fichier PDF introuvable : {input_pdf_path}")
@@ -68,7 +62,6 @@ def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
             pdf_bytes = pytesseract.image_to_pdf_or_hocr(img, extension='pdf', lang=lang)
             f.write(pdf_bytes)
     return ocr_pdf_path
-
 
 def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
     """
@@ -82,9 +75,6 @@ def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
     Returns:
         str: Chemin vers le PDF OCRisé généré.
     """
-    import os
-    from pdf2image import convert_from_path
-    import pytesseract
 
     if not os.path.exists(input_pdf_path):
         raise FileNotFoundError(f"Fichier PDF introuvable : {input_pdf_path}")
@@ -96,7 +86,6 @@ def ocrize_pdf(input_pdf_path: str, lang: str = "fra+eng") -> str:
             pdf_bytes = pytesseract.image_to_pdf_or_hocr(img, extension='pdf', lang=lang)
             f.write(pdf_bytes)
     return ocr_pdf_path
-
 
 class BaseExtractor(ABC):
     """
@@ -113,7 +102,6 @@ class BaseExtractor(ABC):
         Returns:
             dict: Dictionnaire contenant une clé 'paragraphs' avec une liste de paragraphes structurés.
         """
-
 
 class PDFExtractor(BaseExtractor):
     """
@@ -266,7 +254,6 @@ class PDFExtractor(BaseExtractor):
         standardized = [standardize_paragraph(p) for p in structured_data]
         return {"paragraphs": standardized}
 
-
 class DOCXExtractor(BaseExtractor):
     """
     Extracts content from DOCX files by converting them to PDF and using PDFExtractor.
@@ -294,7 +281,6 @@ class DOCXExtractor(BaseExtractor):
         extracted_content = pdf_extractor.extract_content(temp_pdf_path)
 
         return extracted_content
-
 
 class HTMLExtractor(BaseExtractor):
     """
@@ -329,7 +315,6 @@ class HTMLExtractor(BaseExtractor):
                 })
         return {"paragraphs": [standardize_paragraph(p) for p in paragraphs]}
 
-
 class TXTExtractor(BaseExtractor):
     """
     Extrait le contenu des fichiers texte brut.
@@ -356,7 +341,6 @@ class TXTExtractor(BaseExtractor):
             "bold": False,
             "italic": False,
         })]}
-
 
 class ExtractorAgent:
     """

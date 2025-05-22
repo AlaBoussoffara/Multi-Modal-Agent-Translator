@@ -1,11 +1,14 @@
-import fitz  # PyMuPDF
 import os
 import re
-import pickle
-import faiss  # Importer FAISS pour la recherche rapide
+
 import numpy as np
-from tqdm import tqdm
+import fitz  # PyMuPDF
+import pickle
+
+import faiss
 from sentence_transformers import SentenceTransformer
+
+from tqdm import tqdm
 
 # Chemin vers le fichier PDF
 PDF_PATH = "glossary/dictgeniecivil.pdf"
@@ -86,7 +89,7 @@ def create_faiss_index(glossary, model, output_path):
         output_path (str): Chemin pour sauvegarder la base de données FAISS.
     """
     # Générer les embeddings pour tous les termes originaux
-    print("Génération des embeddings pour FAISS...")
+    print("Génération des embeddings pour FAISS")
     embeddings = []
     with tqdm(total=len(glossary), desc="Génération des embeddings", unit="terme") as pbar:
         for original, _ in glossary:
@@ -96,28 +99,23 @@ def create_faiss_index(glossary, model, output_path):
     embeddings = np.array(embeddings, dtype="float32")  # FAISS nécessite des float32
 
     # Créer un index FAISS exact (IndexFlatL2 pour la recherche exacte)
-    print("Création de l'index FAISS exact...")
+    print("Création de l'index FAISS exact")
     index = faiss.IndexFlatL2(embeddings.shape[1])
 
     # Ajouter les embeddings à l'index avec une barre de progression
-    print("Ajout des embeddings à l'index FAISS...")
     with tqdm(total=len(embeddings), desc="Ajout des embeddings", unit="terme") as pbar:
         for i in range(0, len(embeddings), 1000):  # Ajouter par lots pour éviter les ralentissements
             batch = embeddings[i:i + 1000]
             index.add(batch)
             pbar.update(len(batch))
 
-    print(f"Index FAISS exact créé avec {index.ntotal} vecteurs.")
-
     # Sauvegarder l'index FAISS
     faiss.write_index(index, output_path)
-    print(f"Index FAISS sauvegardé dans '{output_path}'.")
 
     # Sauvegarder les métadonnées (termes originaux et traduits)
     metadata_path = output_path.replace(".faiss", "_metadata.pickle")
     with open(metadata_path, "wb") as f:
         pickle.dump(glossary, f)
-    print(f"Métadonnées sauvegardées dans '{metadata_path}'.")
 
 def main():
     # Vérifier si le fichier PDF existe

@@ -1,61 +1,56 @@
 """
-Module for generating output files that integrate translated content into the original layout.
+Module pour générer des fichiers de sortie qui intègrent le contenu traduit dans la mise en page originale.
 
-This module defines abstract base classes and concrete implementations
-for PDF, DOCX, HTML, and TXT outputs.
+Ce module définit des classes de base abstraites et des implémentations concrètes
+pour les sorties PDF, DOCX, HTML et TXT.
 """
 
+import os
 from abc import ABC, abstractmethod
 from collections import Counter
-import fitz
+
 import numpy as np
-from docx import Document
-from docx.shared import Pt, RGBColor
+import fitz  # PyMuPDF
 from PIL import Image
-import os
-import tempfile
-import shutil
 
-# Convert PDF back to DOCX using pdf2docx
 from pdf2docx import Converter
-
 
 class BaseOutputGenerator(ABC):
     """
-    Abstract base class for output generators.
+    Classe de base abstraite pour les générateurs de sortie.
     """
     @abstractmethod
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Reinserts translated content into the original layout and saves the output file.
+        Réinsère le contenu traduit dans la mise en page originale et enregistre le fichier de sortie.
 
         Args:
-            structured_data (dict): Translated content structured by paragraphs.
-            original_filepath (str): Path to the original file.
-            output_filepath (str): Path to save the output file.
+            structured_data (dict): Contenu traduit structuré par paragraphes.
+            original_filepath (str): Chemin vers le fichier original.
+            output_filepath (str): Chemin pour enregistrer le fichier de sortie.
         """
 
 class PDFGenerator(BaseOutputGenerator):
     """
-    Generates PDF output using PyMuPDF, handling redaction and insertion of translated text.
+    Génère une sortie PDF en utilisant PyMuPDF, gère la rédaction et l'insertion du texte traduit.
     """
     def get_background_color_from_bbox(self, pdf_path, page_number, bbox,
                                        zoom=2, border_width=5, exclude_color=None,
                                        tolerance=20):
         """
-        Sample the background color from a bounding box area in a PDF page.
+        Échantillonne la couleur d'arrière-plan à partir d'une zone de boîte englobante dans une page PDF.
 
         Args:
-            pdf_path (str): Path to the PDF file.
-            page_number (int): Page number.
-            bbox (tuple): Bounding box (x0, y0, x1, y1).
-            zoom (int, optional): Zoom factor for sampling.
-            border_width (int, optional): Width of the border area.
-            exclude_color (tuple, optional): RGB color to exclude.
-            tolerance (int, optional): Tolerance for color exclusion.
+            pdf_path (str): Chemin vers le fichier PDF.
+            page_number (int): Numéro de la page.
+            bbox (tuple): Boîte englobante (x0, y0, x1, y1).
+            zoom (int, optionnel): Facteur de zoom pour l'échantillonnage.
+            border_width (int, optionnel): Largeur de la bordure.
+            exclude_color (tuple, optionnel): Couleur RVB à exclure.
+            tolerance (int, optionnel): Tolérance pour l'exclusion de couleur.
 
         Returns:
-            tuple: Normalized RGB color.
+            tuple: Couleur RVB normalisée.
         """
         doc = fitz.open(pdf_path)
         page = doc[page_number]
@@ -96,15 +91,16 @@ class PDFGenerator(BaseOutputGenerator):
 
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Generate a PDF by redacting original text and inserting translated text.
+        Génère un PDF en rédigeant le texte original et en insérant le texte traduit.
 
         Args:
-            structured_data (dict): Translated content with paragraph metadata.
-            original_filepath (str): Path to the original PDF.
-            output_filepath (str): Path to save the modified PDF.
+            structured_data (dict): Contenu traduit avec les métadonnées des paragraphes.
+            original_filepath (str): Chemin vers le PDF original.
+            output_filepath (str): Chemin pour enregistrer le PDF modifié.
         """
         doc = fitz.open(original_filepath)
-        # Step 1: Redact original text
+        
+        # Etape 1: lecture du fichier original
         for para in structured_data.get("paragraphs", []):
             page_num = para["page"]
             bbox = para["bbox"]
@@ -128,7 +124,8 @@ class PDFGenerator(BaseOutputGenerator):
             page.add_redact_annot(redaction_rect, fill=fill_color)
         for page in doc:
             page.apply_redactions()
-        # Step 2: Insert translated text
+
+        # Etape 2: insertion du texte traduit
         for para in structured_data.get("paragraphs", []):
             page_num = para["page"]
             page = doc[page_num]
@@ -178,53 +175,49 @@ class PDFGenerator(BaseOutputGenerator):
                 lineheight=spacing,
                 align=0
             )
-        # Step 3: Save the modified PDF with compression
+
+        # Etape 3 : sauvegarde du PDF
         doc.save(output_filepath, garbage=4, deflate=True, clean=True)
         doc.close()
-        print(f"✅ New PDF created from '{original_filepath}' => '{output_filepath}'")
+        print(f"PDF généré '{original_filepath}' => '{output_filepath}'")
 
 class DOCXGenerator(BaseOutputGenerator):
     """
-    Generates a DOCX file by converting a PDF generated by PDFGenerator back to DOCX.
+    Génère un fichier DOCX en convertissant un PDF généré par PDFGenerator en DOCX.
     """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Generate a DOCX file by converting a PDF generated by PDFGenerator.
+        Génère un fichier DOCX en convertissant un PDF généré par PDFGenerator.
 
         Args:
-            structured_data (dict): Translated content with paragraph metadata.
-            original_filepath (str): Path to the original DOCX file.
-            output_filepath (str): Path to save the modified DOCX file.
+            structured_data (dict): Contenu traduit avec les métadonnées des paragraphes.
+            original_filepath (str): Chemin vers le fichier DOCX original.
+            output_filepath (str): Chemin pour enregistrer le fichier DOCX modifié.
         """
-        # Generate PDF using PDFGenerator
         temp_pdf_path = output_filepath.replace(".docx", "_temp.pdf")
         original_filepath_pdf = original_filepath.replace(".docx", "_temp.pdf")
         pdf_generator = PDFGenerator()
         pdf_generator.generate_output(structured_data, original_filepath_pdf, temp_pdf_path)
 
-
-
         pdf_converter = Converter(temp_pdf_path)
-        pdf_converter.convert(output_filepath, start=0, end=None)  # Convert all pages
+        pdf_converter.convert(output_filepath, start=0, end=None)
         pdf_converter.close()
 
-        # Clean up temporary translated PDF
         os.remove(temp_pdf_path)
-        #clen up temporary original PDF
         os.remove(original_filepath_pdf)
 
 class HTMLGenerator(BaseOutputGenerator):
     """
-    Generates an HTML file with translated content.
+    Génère un fichier HTML avec le contenu traduit.
     """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Generate an HTML file from the translated paragraphs.
+        Génère un fichier HTML à partir des paragraphes traduits.
 
         Args:
-            structured_data (dict): Translated content.
-            original_filepath (str): Path to the original file.
-            output_filepath (str): Path to save the HTML file.
+            structured_data (dict): Contenu traduit.
+            original_filepath (str): Chemin vers le fichier original.
+            output_filepath (str): Chemin pour enregistrer le fichier HTML.
         """
         html = "<html><body>\n"
         for para in structured_data.get("paragraphs", []):
@@ -235,16 +228,16 @@ class HTMLGenerator(BaseOutputGenerator):
 
 class TXTGenerator(BaseOutputGenerator):
     """
-    Generates a plain text file with translated content.
+    Génère un fichier texte brut avec le contenu traduit.
     """
     def generate_output(self, structured_data: dict, original_filepath: str, output_filepath: str):
         """
-        Generate a TXT file from the translated paragraphs.
+        Génère un fichier TXT à partir des paragraphes traduits.
 
         Args:
-            structured_data (dict): Translated content.
-            original_filepath (str): Path to the original file.
-            output_filepath (str): Path to save the TXT file.
+            structured_data (dict): Contenu traduit.
+            original_filepath (str): Chemin vers le fichier original.
+            output_filepath (str): Chemin pour enregistrer le fichier TXT.
         """
         with open(output_filepath, 'w', encoding='utf-8') as f:
             for para in structured_data.get("paragraphs", []):
@@ -252,28 +245,28 @@ class TXTGenerator(BaseOutputGenerator):
 
 class GeneratorAgent:
     """
-    Agent responsible for generating output files with the translated content based on file type.
+    Agent responsable de la génération des fichiers de sortie avec le contenu traduit selon le type de fichier.
     """
     def __init__(self, file_type: str):
         """
-        Initialize the generator agent.
+        Initialise l'agent générateur.
 
         Args:
-            file_type (str): Type of the file ('pdf', 'docx', 'html', or 'txt').
+            file_type (str): Type de fichier ('pdf', 'docx', 'html' ou 'txt').
         """
         self.file_type = file_type
 
     def generate(self, structured_data_dict: dict, original_filepath: str, output_filepath: str):
         """
-        Generate the output file using the appropriate generator based on the file type.
+        Génère le fichier de sortie en utilisant le générateur approprié selon le type de fichier.
 
         Args:
-            structured_data_dict (dict): Structured translated content.
-            original_filepath (str): Path to the original file.
-            output_filepath (str): Path to save the generated file.
+            structured_data_dict (dict): Contenu traduit structuré.
+            original_filepath (str): Chemin vers le fichier original.
+            output_filepath (str): Chemin pour enregistrer le fichier généré.
 
         Raises:
-            ValueError: If the file type is unsupported.
+            ValueError: Si le type de fichier n'est pas supporté.
         """
         if self.file_type == "pdf":
             generator = PDFGenerator()

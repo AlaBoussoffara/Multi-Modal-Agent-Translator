@@ -4,18 +4,18 @@ translator_agent.py
 Ce module définit la classe `TranslatorAgent` pour traduire des paragraphes en utilisant un modèle de langage (LLM),
 tout en préservant les métadonnées et la mise en forme. Il prend en charge la traduction par blocs avec une prise
 en compte du contexte.
-
 """
 
+import numpy as np
 import pickle
-import time
+import faiss
 from sentence_transformers import util, SentenceTransformer
+
 from langchain.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from tqdm import tqdm
 from langchain_aws import ChatBedrock
-import faiss  # Importer FAISS pour la recherche rapide
-import numpy as np  # Pour manipuler les vecteurs
+from langchain_core.output_parsers import StrOutputParser
+
+from tqdm import tqdm
 
 class TranslatorAgent:
     """
@@ -220,12 +220,10 @@ class TranslatorAgent:
                 # Récupérer les termes pertinents du glossaire si l'option est activée
                 glossary_prompt = ""
                 if use_glossary:
-                    # start = time.time()
                     relevant_glossary_terms = self._get_relevant_glossary_terms(chunk)
-                    # print(f"Temps de récupération des termes pertinents : {time.time() - start:.2f} secondes")
                     glossary_prompt = "\n".join([f"{original} -> {translated}" for original, translated in relevant_glossary_terms])
 
-                    # Afficher les termes pertinents pour debug
+                    # Afficher les informations de la requête
                     # print(f"Phrase à traduire : {chunk}")
                     # print(f"Termes pertinents ajoutés au prompt : {glossary_prompt}")
 
