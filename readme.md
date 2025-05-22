@@ -1,1 +1,1 @@
-```pip install -r requirements.txt```
+Toute la documentation du projet ainsi que les slides de notre soutenance finale sont contenues dans le dossier doc/
