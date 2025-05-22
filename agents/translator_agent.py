@@ -283,15 +283,14 @@ OUTPUT ONLY the translated version of the current chunk.
         return translated_data
 
 if __name__ == "__main__":
+    # Exemple d'utilisation de l'agent de traduction avec RAG
     llm = ChatBedrock(
         client=None,
         model_id="us.meta.llama3-3-70b-instruct-v1:0",
         region_name="us-west-2",
         model_kwargs={"temperature": 0}
     )
-    
+
     translator = TranslatorAgent(llm, "english")
     translated_paragraphs = translator.translate([{"text": "Reniflard / filtre"}], use_glossary=True)
-    print(translated_paragraphs)
-    # translated_paragraphs = translator.translate([{"text": "Reniflard / filtre"}], use_glossary=False)
-    # print(translated_paragraphs)
+    print(f"Traduction : {translated_paragraphs[0]['text']}")

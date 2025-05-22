@@ -1,3 +1,7 @@
+'''
+Ce script extrait les termes d'un glossaire d'un fichier PDF et crée une base de données FAISS pour la recherche rapide
+'''
+
 import os
 import re
 

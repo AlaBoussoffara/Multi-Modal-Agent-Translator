@@ -1,6 +1,6 @@
 """
 Module démontrant un pipeline de traduction basé sur LangGraph avec évaluation.
-Ce pipeline utilise LangChain et StateGraph et ajoute un nœud d'évaluation à la fin.
+Ce pipeline utilise LangChain
 """
 
 import os
@@ -129,7 +129,6 @@ def langgraph_pipeline(src_filepath: str, mt_filepath: str, ref_filepath: str, t
         return {"mt_filepath": state["mt_filepath"], "evaluation_results": evaluation_results}
 
     # Construction du graphe d'états
-    print(src_filepath, mt_filepath, ref_filepath)
     builder = StateGraph(OverallState, input=InputState, output=OutputState)
     builder.add_node("TypeDetectionNode", type_detection_node)
     builder.add_node("ExtractNode", extract_node)
@@ -174,22 +173,24 @@ if __name__ == "__main__":
     ref_dir = "ref_translations"
     os.makedirs(output_dir, exist_ok=True)
 
-    ocrize_pdf("src_documents/exemple_image.pdf")
+    # Exemple de traitement OCR sur un fichier PDF
+    ocrize_pdf("src_documents/exemple_image.pdf") # On applique le traitement OCR pour générer le fichier exemple_image_ocr.pdf
     src_filepath = os.path.join(input_dir, "exemple_image_ocr.pdf")
     file_root, file_ext = os.path.splitext(src_filepath)
     ref_filepath = os.path.join(ref_dir, "exemple_image_ocr.pdf")
     mt_filepath = os.path.join(output_dir, f"exemple_image_translated{file_ext}")
-    print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="french", use_glossary=True, evaluate=False))
+    print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="french", use_glossary=True, evaluate=False)) # application du pipeline LangGraph sur le fichier OCRisé
 
-    # for input_file in ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]:
-    #     src_filepath = os.path.join(input_dir, input_file)
-    #     file_root, file_ext = os.path.splitext(input_file)
-    #     ref_filepath = os.path.join(ref_dir, input_file)
+    # Exemple du traitement des deux fichiers pour comparer la version avec et sans RAG
+    for input_file in ["Rapport d'audit technique Vaudrimesnil + commentaire EDPR.pdf", "SQ_15830852.pdf"]:
+        src_filepath = os.path.join(input_dir, input_file)
+        file_root, file_ext = os.path.splitext(input_file)
+        ref_filepath = os.path.join(ref_dir, input_file)
 
-    #     # évaluation sans RAG
-    #     mt_filepath = os.path.join(output_dir, f"{file_root}_translated_noRAG{file_ext}")
-    #     print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True))
-    #     # évaluation avec RAG
-    #     mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
-    #     print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
+        # évaluation sans RAG
+        mt_filepath = os.path.join(output_dir, f"{file_root}_translated_noRAG{file_ext}")
+        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=False, evaluate=True))
+        # évaluation avec RAG
+        mt_filepath = os.path.join(output_dir, f"{file_root}_translated_RAG{file_ext}")
+        print(langgraph_pipeline(src_filepath, mt_filepath, ref_filepath, target_language="english", use_glossary=True, evaluate=True))
         
